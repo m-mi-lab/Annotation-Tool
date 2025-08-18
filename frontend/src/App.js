@@ -327,6 +327,13 @@ const Dashboard = () => {
       setSentences(response.data);
       setSelectedDocument(documentId);
       setCurrentSentenceIndex(0);
+      
+      // Switch to annotate tab after loading sentences
+      const annotateTab = document.querySelector('[data-state="inactive"][value="annotate"]') || 
+                         document.querySelector('[data-value="annotate"]');
+      if (annotateTab) {
+        annotateTab.click();
+      }
     } catch (error) {
       console.error('Error loading sentences:', error);
     }
