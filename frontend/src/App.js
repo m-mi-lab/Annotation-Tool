@@ -284,9 +284,7 @@ const Dashboard = () => {
 
   const fetchDocuments = async () => {
     try {
-      console.log('Fetching documents...');
       const response = await axios.get(`${API}/documents`);
-      console.log('Documents fetched:', response.data);
       setDocuments(response.data);
     } catch (error) {
       console.error('Error fetching documents:', error);
