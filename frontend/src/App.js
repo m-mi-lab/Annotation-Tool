@@ -325,19 +325,29 @@ const Dashboard = () => {
   };
 
   const loadDocumentSentences = async (documentId) => {
+    console.log('=== loadDocumentSentences CALLED ===');
+    console.log('Document ID:', documentId);
+    console.log('API URL:', `${API}/documents/${documentId}/sentences`);
+    console.log('Axios defaults:', axios.defaults.headers.common);
+    
     try {
-      console.log('Loading sentences for document:', documentId);
+      console.log('Making API request...');
       const response = await axios.get(`${API}/documents/${documentId}/sentences`);
-      console.log('Sentences response:', response.data);
+      console.log('API Response status:', response.status);
+      console.log('API Response data:', response.data);
+      
       setSentences(response.data);
       setSelectedDocument(documentId);
       setCurrentSentenceIndex(0);
       
       console.log('Switching to annotate tab');
-      // Switch to annotate tab
       setActiveTab('annotate');
+      console.log('=== loadDocumentSentences COMPLETED ===');
     } catch (error) {
-      console.error('Error loading sentences:', error);
+      console.error('=== loadDocumentSentences ERROR ===');
+      console.error('Error details:', error);
+      console.error('Error response:', error.response);
+      console.error('Error message:', error.message);
     }
   };
 
