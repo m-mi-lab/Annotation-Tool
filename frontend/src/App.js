@@ -471,8 +471,7 @@ const Dashboard = () => {
                     </div>
                     <Button
                       onClick={() => {
-                        console.log('Annotate button clicked for document:', doc);
-                        console.log('Document ID:', doc.id);
+                        alert('Annotate clicked! Doc ID: ' + doc.id);
                         loadDocumentSentences(doc.id);
                       }}
                       variant="outline"
