@@ -468,7 +468,11 @@ const Dashboard = () => {
                       </p>
                     </div>
                     <Button
-                      onClick={() => loadDocumentSentences(doc.id)}
+                      onClick={() => {
+                        console.log('Annotate button clicked for document:', doc);
+                        console.log('Document ID:', doc.id);
+                        loadDocumentSentences(doc.id);
+                      }}
                       variant="outline"
                     >
                       Annotate
