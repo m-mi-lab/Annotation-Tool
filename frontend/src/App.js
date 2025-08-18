@@ -268,6 +268,7 @@ const Dashboard = () => {
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [uploadFile, setUploadFile] = useState(null);
+  const [activeTab, setActiveTab] = useState('upload');
   const [domains] = useState([
     "Economic Stability",
     "Education Access and Quality", 
