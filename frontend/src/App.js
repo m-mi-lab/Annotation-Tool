@@ -324,6 +324,12 @@ const Dashboard = () => {
     }
   };
 
+  const handleAnnotateClick = (documentId) => {
+    console.log('=== ANNOTATE HANDLER CALLED ===');
+    console.log('Document ID received:', documentId);
+    loadDocumentSentences(documentId);
+  };
+
   const loadDocumentSentences = async (documentId) => {
     console.log('=== loadDocumentSentences CALLED ===');
     console.log('Document ID:', documentId);
