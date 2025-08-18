@@ -475,26 +475,32 @@ const Dashboard = () => {
 
         <TabsContent value="documents" className="space-y-4">
           <div className="grid gap-4">
-            {documents.map((doc) => (
-              <Card key={doc.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium">{doc.filename}</h3>
-                      <p className="text-sm text-gray-600">
-                        {doc.total_sentences} sentences • Uploaded {new Date(doc.upload_date).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <Button
-                      onClick={() => handleAnnotateClick(doc.id)}
-                      variant="outline"
-                    >
-                      Annotate
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            {(() => {
+              console.log('Rendering documents tab, documents:', documents.length);
+              return documents.map((doc, index) => {
+                console.log(`Rendering document ${index}:`, doc);
+                return (
+                  <Card key={doc.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium">{doc.filename}</h3>
+                          <p className="text-sm text-gray-600">
+                            {doc.total_sentences} sentences • Uploaded {new Date(doc.upload_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Button
+                          onClick={() => handleAnnotateClick(doc.id)}
+                          variant="outline"
+                        >
+                          Annotate
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              });
+            })()}
           </div>
         </TabsContent>
 
