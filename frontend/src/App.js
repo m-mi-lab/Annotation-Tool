@@ -410,39 +410,49 @@ const Dashboard = () => {
         </TabsContent>
 
         <TabsContent value="annotate" className="space-y-4">
-          {!selectedDocument ? (
-            <Card>
-              <CardContent className="text-center py-8">
-                <Tag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">
-                  Select a document from the Documents tab to start annotating
-                </p>
-                <Button 
-                  variant="outline"
-                  onClick={() => setActiveTab('documents')}
-                >
-                  Browse Documents
-                </Button>
-              </CardContent>
-            </Card>
-          ) : sentences.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">
-                  Loading sentences for annotation...
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <AnnotationInterface 
-              sentences={sentences}
-              currentIndex={currentSentenceIndex}
-              onIndexChange={setCurrentSentenceIndex}
-              domains={domains}
-              onAnnotate={createAnnotation}
-            />
-          )}
+          {(() => {
+            console.log('Annotate tab state:', { selectedDocument, sentencesLength: sentences.length });
+            
+            if (!selectedDocument) {
+              return (
+                <Card>
+                  <CardContent className="text-center py-8">
+                    <Tag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 mb-2">
+                      Select a document from the Documents tab to start annotating
+                    </p>
+                    <Button 
+                      variant="outline"
+                      onClick={() => setActiveTab('documents')}
+                    >
+                      Browse Documents
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            } else if (sentences.length === 0) {
+              return (
+                <Card>
+                  <CardContent className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">
+                      Loading sentences for annotation...
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            } else {
+              return (
+                <AnnotationInterface 
+                  sentences={sentences}
+                  currentIndex={currentSentenceIndex}
+                  onIndexChange={setCurrentSentenceIndex}
+                  domains={domains}
+                  onAnnotate={createAnnotation}
+                />
+              );
+            }
+          })()}
         </TabsContent>
 
         <TabsContent value="documents" className="space-y-4">
