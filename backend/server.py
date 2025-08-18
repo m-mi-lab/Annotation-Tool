@@ -270,13 +270,13 @@ async def get_document_sentences(
     current_user: User = Depends(get_current_user)
 ):
     sentences = await db.sentences.find(
-        {"document_id": document_id}
+        {"document_id": document_id}, {"_id": 0}  # Exclude MongoDB _id field
     ).skip(skip).limit(limit).to_list(limit)
     
     # Get existing annotations for these sentences
     sentence_ids = [sentence['id'] for sentence in sentences]
     annotations = await db.annotations.find(
-        {"sentence_id": {"$in": sentence_ids}}
+        {"sentence_id": {"$in": sentence_ids}}, {"_id": 0}  # Exclude MongoDB _id field
     ).to_list(1000)
     
     # Group annotations by sentence
