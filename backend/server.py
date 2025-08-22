@@ -412,14 +412,47 @@ async def delete_user_by_admin(
     user_id: str,
     admin_user: User = Depends(get_admin_user)
 ):
-    """Admin only: Delete user account"""
-    result = await db.users.delete_one({"id": user_id})
-    if result.deleted_count == 0:
+    """Admin only: Delete user account and all related data"""
+    # Check if user exists
+    user = await db.users.find_one({"id": user_id})
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    return {"message": "User deleted successfully"}
+    
+    # Prevent admin from deleting themselves
+    if user_id == admin_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete your own account"
+        )
+    
+    try:
+        # Delete user's annotations first
+        annotations_deleted = await db.annotations.delete_many({"user_id": user_id})
+        
+        # Delete the user
+        result = await db.users.delete_one({"id": user_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found during deletion"
+            )
+        
+        return {
+            "message": "User deleted successfully",
+            "user_name": user.get("full_name", "Unknown"),
+            "annotations_deleted": annotations_deleted.deleted_count
+        }
+    
+    except Exception as e:
+        logger.error(f"Error deleting user {user_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete user"
+        )
 
 # Document Routes
 @api_router.post("/documents/upload", response_model=Document)
