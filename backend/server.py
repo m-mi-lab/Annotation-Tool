@@ -791,11 +791,23 @@ async def download_annotated_csv(document_id: str, admin_user: User = Depends(ge
                     ])
                 else:
                     for t in tags:
+                        # Support legacy annotations where tags may be stored as strings
+                        if isinstance(t, dict):
+                            domain = t.get("domain", "")
+                            category = t.get("category", "")
+                            tag_value = t.get("tag", "")
+                            valence = t.get("valence", "")
+                        else:
+                            # Convert any non-dict tag to string and put in tag column
+                            domain = ""
+                            category = ""
+                            tag_value = str(t)
+                            valence = ""
                         writer.writerow([
                             document_id, document.get("filename"), document.get("project_name"), document.get("description"),
                             s.get("id"), s.get("sentence_index"), s.get("text"),
                             ann.get("id"), ann.get("user_id"), False, ann.get("notes", ""),
-                            t.get("domain", ""), t.get("category", ""), t.get("tag", ""), t.get("valence", ""), created_at_str
+                            domain, category, tag_value, valence, created_at_str
                         ])
 
     csv_bytes = output.getvalue().encode("utf-8")
