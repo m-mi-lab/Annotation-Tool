@@ -788,15 +788,21 @@ const AdminManagementPanel = () => {
                     size="sm"
                     variant="outline"
                     onClick={() => toggleUserStatus(user.id, user.is_active)}
+                    disabled={loading}
                   >
                     {user.is_active ? 'Deactivate' : 'Activate'}
                   </Button>
                   <Button
                     size="sm"
                     variant="destructive"
-                    onClick={() => deleteUser(user.id)}
+                    onClick={() => deleteUser(user.id, user.full_name)}
+                    disabled={deletingUserId === user.id}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    {deletingUserId === user.id ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
