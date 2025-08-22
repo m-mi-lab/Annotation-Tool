@@ -1073,6 +1073,30 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
 
         <CardContent className="space-y-6">
           <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm text-gray-600">Subject: {currentSubject || 'N/A'}</p>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={() => {
+                  if (!currentSubject) return;
+                  // Find previous index with a different subject
+                  for (let i = currentIndex - 1; i >= 0; i--) {
+                    if (sentences[i]?.subject_id && sentences[i].subject_id !== currentSubject) {
+                      onIndexChange(i);
+                      return;
+                    }
+                  }
+                }} disabled={!currentSubject}>Prev Subject</Button>
+                <Button size="sm" variant="outline" onClick={() => {
+                  if (!currentSubject) return;
+                  for (let i = currentIndex + 1; i < sentences.length; i++) {
+                    if (sentences[i]?.subject_id && sentences[i].subject_id !== currentSubject) {
+                      onIndexChange(i);
+                      return;
+                    }
+                  }
+                }} disabled={!currentSubject}>Next Subject</Button>
+              </div>
+            </div>
             <p className="text-lg leading-relaxed">{currentSentence.text}</p>
           </div>
 
