@@ -686,21 +686,29 @@ const AdminManagementPanel = () => {
     try {
       console.log('=== FETCHUSERS CALLED ===');
       console.log('Current users state before fetch:', users.length, 'users');
-      console.log('Current users:', users.map(u => ({id: u.id, email: u.email})));
       
       setLoading(true);
-      console.log('Making API request to:', `${API}/admin/users`);
       
-      const response = await axios.get(`${API}/admin/users`);
+      // Add cache-busting timestamp to prevent stale data
+      const timestamp = new Date().getTime();
+      const url = `${API}/admin/users?_t=${timestamp}`;
+      console.log('Making API request to:', url);
+      
+      const response = await axios.get(url, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
       console.log('=== API RESPONSE RECEIVED ===');
       console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-      console.log('Raw response data:', response.data);
-      console.log('Number of users in response:', response.data.length);
+      console.log('Raw response data length:', response.data.length);
       console.log('Users from API:', response.data.map(u => ({id: u.id, email: u.email, name: u.full_name})));
       
       console.log('About to update React state...');
-      setUsers(response.data);
+      setUsers([...response.data]); // Force new array reference
       console.log('React state updated with new user list');
       
       // Force a re-render
