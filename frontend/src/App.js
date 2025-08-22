@@ -784,8 +784,13 @@ const AdminManagementPanel = () => {
       
       console.log('Making DELETE request to:', `${API}/admin/users/${userId}`);
       
-      // Make the delete request
-      const response = await axios.delete(`${API}/admin/users/${userId}`);
+      // Make the delete request with cache-busting
+      const response = await axios.delete(`${API}/admin/users/${userId}`, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
       console.log('Delete response:', response.status, response.data);
       
       if (response.status === 200) {
