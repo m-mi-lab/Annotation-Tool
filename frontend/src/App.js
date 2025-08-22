@@ -578,11 +578,14 @@ const Dashboard = () => {
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button
-                        onClick={(e) => {
-                          console.log('=== ANNOTATE BUTTON CLICKED ===', doc.id);
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleAnnotateClick(doc.id);
+                        onClick={() => {
+                          console.log('=== BUTTON CLICK EVENT ===');
+                          console.log('Document ID:', doc.id);
+                          console.log('handleAnnotateClick function:', typeof handleAnnotateClick);
+                          
+                          // Direct call to load sentences
+                          console.log('Calling loadDocumentSentences directly');
+                          loadDocumentSentences(doc.id);
                         }}
                         variant="outline"
                       >
