@@ -362,7 +362,9 @@ const Dashboard = () => {
 
   const refreshSentenceAnnotations = async (sentenceId) => {
     try {
-      const res = await axios.get(`${API}/annotations/sentence/${sentenceId}`);
+      const res = await axios.get(`${API}/annotations/sentence/${sentenceId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
       setSentences((prev) => prev.map((s) => (s.id === sentenceId ? { ...s, annotations: res.data } : s)));
     } catch (err) {
       console.error('Error refreshing sentence annotations', err);
