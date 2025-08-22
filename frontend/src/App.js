@@ -684,17 +684,37 @@ const AdminManagementPanel = () => {
 
   const fetchUsers = async () => {
     try {
-      console.log('Fetching users from API...');
-      const response = await axios.get(`${API}/admin/users`);
-      console.log('Received users from API:', response.data.length, 'users');
-      console.log('User list:', response.data.map(u => ({ id: u.id, name: u.full_name, email: u.email })));
+      console.log('=== FETCHUSERS CALLED ===');
+      console.log('Current users state before fetch:', users.length, 'users');
+      console.log('Current users:', users.map(u => ({id: u.id, email: u.email})));
       
+      setLoading(true);
+      console.log('Making API request to:', `${API}/admin/users`);
+      
+      const response = await axios.get(`${API}/admin/users`);
+      console.log('=== API RESPONSE RECEIVED ===');
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      console.log('Raw response data:', response.data);
+      console.log('Number of users in response:', response.data.length);
+      console.log('Users from API:', response.data.map(u => ({id: u.id, email: u.email, name: u.full_name})));
+      
+      console.log('About to update React state...');
       setUsers(response.data);
-      console.log('State updated with new user list');
+      console.log('React state updated with new user list');
+      
+      // Force a re-render
+      setRefreshKey(prev => prev + 1);
+      console.log('Forced re-render with new refreshKey');
       
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('=== FETCHUSERS ERROR ===');
+      console.error('Error details:', error);
+      console.error('Error response:', error.response);
       alert('Error fetching users: ' + (error.response?.data?.detail || 'Please try again.'));
+    } finally {
+      setLoading(false);
+      console.log('=== FETCHUSERS COMPLETED ===');
     }
   };
 
