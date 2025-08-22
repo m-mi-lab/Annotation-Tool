@@ -818,8 +818,16 @@ const AdminManagementPanel = () => {
         setTimeout(async () => {
           console.log('Performing additional refresh...');
           try {
-            const refreshResponse = await axios.get(`${API}/admin/users`);
+            const timestamp = new Date().getTime();
+            const refreshResponse = await axios.get(`${API}/admin/users?_t=${timestamp}`, {
+              headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+              }
+            });
             setUsers([...refreshResponse.data]);
+            setRefreshKey(prev => prev + 1);
             console.log('Additional refresh completed');
           } catch (err) {
             console.error('Additional refresh failed:', err);
