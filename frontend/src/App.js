@@ -380,6 +380,8 @@ const Dashboard = () => {
       alert('Error deleting annotation: ' + (error.response?.data?.detail || 'Please try again.'));
     }
   };
+
+  const createAnnotation = async (sentenceId, tags, notes, skipped = false) => {
     try {
       // Handle annotation completion signal
       if (sentenceId === 'ANNOTATION_COMPLETE') {
