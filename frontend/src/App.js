@@ -365,6 +365,12 @@ const Dashboard = () => {
 
   const createAnnotation = async (sentenceId, tags, notes, skipped = false) => {
     try {
+      // Handle annotation completion signal
+      if (sentenceId === 'ANNOTATION_COMPLETE') {
+        setActiveTab('documents');
+        return;
+      }
+
       await axios.post(`${API}/annotations`, {
         sentence_id: sentenceId,
         tags: tags,
@@ -381,6 +387,7 @@ const Dashboard = () => {
       fetchAnalytics();
     } catch (error) {
       console.error('Error creating annotation:', error);
+      alert('Error saving annotation: ' + (error.response?.data?.detail || 'Please try again.'));
     }
   };
 
