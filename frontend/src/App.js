@@ -1140,7 +1140,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
           )}
 
           {/* Selected Tags Display */}
-          {selectedTags.length &gt; 0 && (
+          {selectedTags.length > 0 && (
             <div className="space-y-2">
               <h4 className="font-medium text-gray-900">Selected Tags:</h4>
               <div className="space-y-2">
