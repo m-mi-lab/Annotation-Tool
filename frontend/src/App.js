@@ -842,9 +842,9 @@ const AdminManagementPanel = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {users.map((user) => (
-              <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
+          <div className="space-y-4" key={refreshKey}>
+            {users.map((user, index) => (
+              <div key={`${user.id}-${refreshKey}-${index}`} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="flex items-center space-x-2">
                     {user.role === 'admin' && <Shield className="h-4 w-4 text-purple-600" />}
