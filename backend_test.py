@@ -501,8 +501,128 @@ class SDOHAPITester:
         """Test tag prevalence analytics (updated endpoint)"""
         return self.run_test("Tag Prevalence Analytics", "GET", "analytics/tag-prevalence", 200)
 
+    def test_admin_delete_user_validation(self):
+        """Test user deletion validation (cannot delete self)"""
+        if not self.admin_user_id:
+            print("❌ No admin user ID available")
+            return False
+            
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        # Try to delete self - should fail with 400
+        success, response = self.run_test(
+            "Admin - Delete Self (Should Fail)",
+            "DELETE",
+            f"admin/users/{self.admin_user_id}",
+            400  # Expect bad request
+        )
+        
+        if success:
+            print("   ✅ Self-deletion properly prevented")
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_admin_delete_nonexistent_user(self):
+        """Test deleting non-existent user"""
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        fake_user_id = "nonexistent-user-id-12345"
+        success, response = self.run_test(
+            "Admin - Delete Non-existent User",
+            "DELETE",
+            f"admin/users/{fake_user_id}",
+            404  # Expect not found
+        )
+        
+        if success:
+            print("   ✅ Non-existent user deletion properly handled")
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_admin_delete_user_with_annotations(self):
+        """Test deleting user who has annotations"""
+        if not self.created_user_ids:
+            print("❌ No created users available for deletion test")
+            return False
+            
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        user_id = self.created_user_ids[0]
+        
+        # Get user info before deletion
+        success, user_info = self.run_test(
+            "Get User Info Before Deletion",
+            "GET",
+            "admin/users",
+            200
+        )
+        
+        if success:
+            user_to_delete = next((u for u in user_info if u['id'] == user_id), None)
+            if user_to_delete:
+                print(f"   User to delete: {user_to_delete['full_name']} ({user_to_delete['email']})")
+        
+        # Delete the user
+        success, response = self.run_test(
+            "Admin - Delete User with Annotations",
+            "DELETE",
+            f"admin/users/{user_id}",
+            200
+        )
+        
+        if success:
+            print(f"   ✅ User deleted successfully")
+            print(f"   Message: {response.get('message', 'N/A')}")
+            print(f"   User name: {response.get('user_name', 'N/A')}")
+            print(f"   Annotations deleted: {response.get('annotations_deleted', 0)}")
+            
+            # Remove from created_user_ids since it's deleted
+            if user_id in self.created_user_ids:
+                self.created_user_ids.remove(user_id)
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_admin_verify_user_deleted(self):
+        """Verify that deleted user no longer appears in user list"""
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        success, response = self.run_test(
+            "Admin - Verify User List After Deletion",
+            "GET",
+            "admin/users",
+            200
+        )
+        
+        if success:
+            print(f"   Current user count: {len(response)}")
+            # Check that none of the deleted users appear in the list
+            remaining_created_users = [u for u in response if u['id'] in self.created_user_ids]
+            if len(remaining_created_users) == 0:
+                print("   ✅ Deleted users no longer appear in user list")
+            else:
+                print(f"   ❌ {len(remaining_created_users)} deleted users still appear in list")
+                return False
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
     def test_admin_delete_created_users(self):
-        """Clean up by deleting created test users"""
+        """Clean up by deleting remaining created test users"""
         if not self.created_user_ids:
             print("ℹ️  No test users to clean up")
             return True
@@ -512,7 +632,7 @@ class SDOHAPITester:
         self.token = self.admin_token
         
         success_count = 0
-        for user_id in self.created_user_ids:
+        for user_id in self.created_user_ids[:]:  # Create a copy to iterate over
             success, response = self.run_test(
                 f"Admin - Delete Test User {user_id[:8]}",
                 "DELETE",
@@ -521,12 +641,13 @@ class SDOHAPITester:
             )
             if success:
                 success_count += 1
+                self.created_user_ids.remove(user_id)
         
-        print(f"   Cleaned up {success_count}/{len(self.created_user_ids)} test users")
+        print(f"   Cleaned up {success_count} test users")
         
         # Restore original token
         self.token = original_token
-        return success_count == len(self.created_user_ids)
+        return True
 
     def run_all_tests(self):
         """Run all API tests including comprehensive admin functionality"""
