@@ -950,24 +950,36 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
     
     await onAnnotate(currentSentence.id, selectedTags, notes);
     
-    // Reset form and move to next sentence
+    // Reset form
     setSelectedTags([]);
     setNotes('');
     
+    // Move to next sentence or return to documents if this was the last sentence
     if (currentIndex < sentences.length - 1) {
       onIndexChange(currentIndex + 1);
+    } else {
+      // Last sentence - return to documents tab
+      alert('Annotation complete! Returning to documents list.');
+      // This will be handled in the parent component
+      onAnnotate('ANNOTATION_COMPLETE', [], '', false);
     }
   };
 
   const handleSkip = async () => {
     await onAnnotate(currentSentence.id, [], notes, true);
     
-    // Reset form and move to next sentence
+    // Reset form
     setSelectedTags([]);
     setNotes('');
     
+    // Move to next sentence or return to documents if this was the last sentence
     if (currentIndex < sentences.length - 1) {
       onIndexChange(currentIndex + 1);
+    } else {
+      // Last sentence - return to documents tab
+      alert('Annotation complete! Returning to documents list.');
+      // This will be handled in the parent component
+      onAnnotate('ANNOTATION_COMPLETE', [], '', false);
     }
   };
 
