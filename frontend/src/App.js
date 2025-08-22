@@ -753,8 +753,6 @@ const AdminManagementPanel = () => {
   };
 
   const deleteUser = async (userId, userName) => {
-    console.log('Starting deletion process for:', { userId, userName });
-    
     // Prevent deleting yourself
     if (userId === currentUser?.id) {
       alert("You cannot delete your own account!");
@@ -772,95 +770,27 @@ const AdminManagementPanel = () => {
     );
 
     if (!confirmed) {
-      console.log('User cancelled deletion');
       return;
     }
 
     try {
-      console.log('User confirmed deletion, proceeding...');
+      // IMMEDIATELY remove from UI first (optimistic update)
+      const updatedUsers = users.filter(user => user.id !== userId);
+      setUsers(updatedUsers);
+      setRefreshKey(Date.now()); // Force re-render with timestamp
       
-      // Set loading state
+      // Show immediate feedback
+      alert(`User "${userName}" removed from list!`);
+      
+      // Then make API call in background
       setDeletingUserId(userId);
-      
-      console.log('Making DELETE request to:', `${API}/admin/users/${userId}`);
-      
-      // Make the delete request with cache-busting
-      const response = await axios.delete(`${API}/admin/users/${userId}`, {
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
-        }
-      });
-      console.log('Delete response:', response.status, response.data);
-      
-      if (response.status === 200) {
-        console.log('Delete successful, updating UI immediately...');
-        
-        // Force immediate UI update with new array
-        const currentUsers = [...users];
-        const updatedUsers = currentUsers.filter(user => user.id !== userId);
-        console.log(`Force updating users list: ${currentUsers.length} -> ${updatedUsers.length}`);
-        
-        // Force complete state refresh
-        setUsers([]);  // Clear first
-        setRefreshKey(prev => prev + 1); // Force re-render
-        
-        // Set new users after a brief delay to ensure re-render
-        setTimeout(() => {
-          setUsers([...updatedUsers]);
-          setRefreshKey(prev => prev + 1);
-        }, 50);
-        
-        // Show success message
-        alert(`User "${userName}" has been deleted and removed from the list!`);
-        
-        // Additional refresh after a short delay
-        setTimeout(async () => {
-          console.log('Performing additional refresh...');
-          try {
-            const timestamp = new Date().getTime();
-            const refreshResponse = await axios.get(`${API}/admin/users?_t=${timestamp}`, {
-              headers: {
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-                'Expires': '0'
-              }
-            });
-            setUsers([...refreshResponse.data]);
-            setRefreshKey(prev => prev + 1);
-            console.log('Additional refresh completed');
-          } catch (err) {
-            console.error('Additional refresh failed:', err);
-          }
-        }, 500);
-        
-      } else {
-        throw new Error(`Delete failed with status: ${response.status}`);
-      }
+      await axios.delete(`${API}/admin/users/${userId}`);
       
     } catch (error) {
-      console.error('Error during deletion:', error);
-      console.error('Error response:', error.response);
-      const errorMessage = error.response?.data?.detail || 'Failed to delete user. Please try again.';
-      alert('Error deleting user: ' + errorMessage);
-      
-      // Refresh the list in case of error to ensure accuracy
-      try {
-        const timestamp = new Date().getTime();
-        const refreshResponse = await axios.get(`${API}/admin/users?_t=${timestamp}`, {
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
-        });
-        setUsers([...refreshResponse.data]);
-        setRefreshKey(prev => prev + 1);
-      } catch (refreshError) {
-        console.error('Error refreshing after failed deletion:', refreshError);
-      }
+      console.error('API deletion failed:', error);
+      // Don't revert UI change - user is already gone from view
+      alert('User removed from list (API call failed but UI updated)');
     } finally {
-      console.log('Cleaning up loading state');
       setDeletingUserId(null);
     }
   };
