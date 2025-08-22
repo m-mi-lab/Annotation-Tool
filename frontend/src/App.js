@@ -502,6 +502,14 @@ const Dashboard = () => {
         { value: 'analytics', label: 'Analytics', icon: BarChart3 }
       ];
 
+  // Support deep links like /dashboard#documents, /dashboard#annotate, etc.
+  useEffect(() => {
+    const hash = window.location.hash?.replace('#', '');
+    if (hash && ['manage','upload','documents','annotate','resources','analytics'].includes(hash)) {
+      setActiveTab(hash);
+    }
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
