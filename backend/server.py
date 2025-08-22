@@ -615,6 +615,35 @@ async def create_annotation(
     await db.annotations.insert_one(annotation.dict())
     return annotation
 
+@api_router.delete("/annotations/{annotation_id}")
+async def delete_annotation(
+    annotation_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete an annotation (user can only delete their own annotations, admins can delete any)"""
+    annotation = await db.annotations.find_one({"id": annotation_id})
+    if not annotation:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Annotation not found"
+        )
+    
+    # Check permissions: users can only delete their own annotations, admins can delete any
+    if annotation["user_id"] != current_user.id and current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only delete your own annotations"
+        )
+    
+    result = await db.annotations.delete_one({"id": annotation_id})
+    if result.deleted_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Annotation not found"
+        )
+    
+    return {"message": "Annotation deleted successfully"}
+
 @api_router.get("/annotations/sentence/{sentence_id}")
 async def get_sentence_annotations(
     sentence_id: str,
