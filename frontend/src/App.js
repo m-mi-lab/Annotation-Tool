@@ -321,6 +321,10 @@ const Dashboard = () => {
   };
 
   const loadDocumentSentences = async (documentId) => {
+    // If deep-linked via hash, ensure tab switches correctly
+    if (window.location.hash === '#annotate') {
+      setActiveTab('annotate');
+    }
     try {
       const response = await axios.get(`${API}/documents/${documentId}/sentences`);
       setSentences(response.data);
