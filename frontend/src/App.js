@@ -820,12 +820,15 @@ const AdminManagementPanel = () => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>User Management</CardTitle>
+            <CardTitle>User Management ({users.length} users)</CardTitle>
             <div className="flex items-center space-x-2">
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={fetchUsers}
+                onClick={() => {
+                  setRefreshKey(prev => prev + 1);
+                  fetchUsers();
+                }}
                 disabled={loading}
               >
                 {loading ? (
