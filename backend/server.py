@@ -265,7 +265,7 @@ def split_into_sentences(text: str) -> List[str]:
     text = re.sub(r'\s+', ' ', text.strip())
     
     # Split on sentence endings, but be careful with abbreviations
-    sentences = re.split(r'(?&lt;=[.!?])\s+(?=[A-Z])', text)
+    sentences = re.split(r'(?<=[.!?])\s+(?=[A-Z])', text)
     
     # Filter out very short sentences and clean up
     cleaned_sentences = []
