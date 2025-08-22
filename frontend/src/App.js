@@ -272,6 +272,24 @@ const Dashboard = () => {
     } catch (error) { /* noop */ }
   };
 
+  const fetchEnhancedAnalytics = async () => {
+    try {
+      const res = await axios.get(`${API}/analytics/enhanced`);
+      setEnhancedAnalytics(res.data || { per_user: [], sentences_left_overall: 0, irr_pairs: [] });
+    } catch (err) {
+      console.error('Error fetching enhanced analytics', err);
+    }
+  };
+
+  const fetchTagPrevalence = async () => {
+    try {
+      const res = await axios.get(`${API}/analytics/tag-prevalence`);
+      setTagPrevalence(res.data || { domain_counts: {}, category_counts: {}, tag_counts: {}, valence_counts: {} });
+    } catch (err) {
+      console.error('Error fetching tag prevalence', err);
+    }
+  };
+
   const fetchTagStructure = async () => {
     try {
       const response = await axios.get(`${API}/tag-structure`);
