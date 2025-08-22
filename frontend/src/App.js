@@ -247,7 +247,7 @@ const Dashboard = () => {
     fetchAnalytics();
     fetchTagStructure();
     fetchResources();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line
   }, []);
 
   const fetchDocuments = async () => {
