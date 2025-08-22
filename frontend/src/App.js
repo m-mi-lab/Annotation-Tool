@@ -360,7 +360,26 @@ const Dashboard = () => {
     }
   };
 
-  const createAnnotation = async (sentenceId, tags, notes, skipped = false) => {
+  const deleteAnnotation = async (annotationId) => {
+    if (!window.confirm('Are you sure you want to delete this annotation?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/annotations/${annotationId}`);
+      
+      // Refresh sentences to show updated annotations
+      if (selectedDocument) {
+        loadDocumentSentences(selectedDocument);
+      }
+      
+      // Refresh analytics
+      fetchAnalytics();
+    } catch (error) {
+      console.error('Error deleting annotation:', error);
+      alert('Error deleting annotation: ' + (error.response?.data?.detail || 'Please try again.'));
+    }
+  };
     try {
       // Handle annotation completion signal
       if (sentenceId === 'ANNOTATION_COMPLETE') {
