@@ -572,15 +572,18 @@ const Dashboard = () => {
         </TabsContent>
 
         <TabsContent value="documents" className="space-y-4" id="documents">
-          {user?.role === 'admin' && (
-            <div className="flex items-center justify-between p-2 bg-gray-50 border rounded">
-              <div className="flex items-center gap-2">
-                <Checkbox id="selectAllDocs" checked={selectAllDocs} onCheckedChange={toggleSelectAllDocs} />
-                <Label htmlFor="selectAllDocs">Select all</Label>
-                <Button variant="destructive" size="sm" onClick={bulkDeleteDocuments} disabled={selectedDocIds.length === 0}>Delete selected</Button>
+          <div className="flex items-center justify-between">
+            <CardTitle>Documents ({documents.length})</CardTitle>
+            {user?.role === 'admin' && (
+              <div className="flex items-center justify-between p-2 bg-gray-50 border rounded">
+                <div className="flex items-center gap-2">
+                  <Checkbox id="selectAllDocs" checked={selectAllDocs} onCheckedChange={toggleSelectAllDocs} />
+                  <Label htmlFor="selectAllDocs">Select all</Label>
+                  <Button variant="destructive" size="sm" onClick={bulkDeleteDocuments} disabled={selectedDocIds.length === 0}>Delete selected</Button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
           <div className="grid gap-4">
             {documents.map((doc) => (
               <Card key={doc.id} className="cursor-pointer hover:shadow-md transition-shadow">
