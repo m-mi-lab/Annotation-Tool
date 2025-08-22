@@ -795,10 +795,24 @@ const AdminManagementPanel = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>User Management</CardTitle>
-            <Button onClick={() => setShowCreateUser(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add User
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={fetchUsers}
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                ) : (
+                  'Refresh'
+                )}
+              </Button>
+              <Button onClick={() => setShowCreateUser(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add User
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
