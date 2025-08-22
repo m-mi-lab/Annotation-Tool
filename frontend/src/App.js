@@ -657,7 +657,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                   <div key={idx} className="p-3 bg-blue-50 rounded-md">
                     {annotation.skipped ? (
                       <div className="flex items-center space-x-2">
-                        <Skip className="h-4 w-4 text-orange-600" />
+                        <SkipForward className="h-4 w-4 text-orange-600" />
                         <span className="text-sm text-gray-600">
                           Skipped by User {annotation.user_id.slice(-6)}
                         </span>
