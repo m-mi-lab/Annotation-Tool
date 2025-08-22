@@ -706,17 +706,37 @@ const AdminManagementPanel = () => {
     }
   };
 
-  const deleteUser = async (userId) => {
-    if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+  const deleteUser = async (userId, userName) => {
+    // Enhanced confirmation dialog
+    const confirmed = window.confirm(
+      `Are you sure you want to delete the user "${userName}"?\n\n` +
+      'This will permanently remove:\n' +
+      '• The user account\n' +
+      '• All their annotations\n' +
+      '• Their login access\n\n' +
+      'This action cannot be undone!'
+    );
+
+    if (!confirmed) {
       return;
     }
 
     try {
-      await axios.delete(`${API}/admin/users/${userId}`);
-      fetchUsers();
+      setLoading(true);
+      const response = await axios.delete(`${API}/admin/users/${userId}`);
+      
+      // Show success message
+      alert('User deleted successfully!');
+      
+      // Refresh the users list
+      await fetchUsers();
+      
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('Error deleting user: ' + (error.response?.data?.detail || 'Please try again.'));
+      const errorMessage = error.response?.data?.detail || 'Failed to delete user. Please try again.';
+      alert('Error deleting user: ' + errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
