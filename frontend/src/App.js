@@ -11,7 +11,10 @@ import { Badge } from "./components/ui/badge";
 import { Textarea } from "./components/ui/textarea";
 import { Alert, AlertDescription } from "./components/ui/alert";
 import { Progress } from "./components/ui/progress";
-import { FileText, Users, BarChart3, Upload, User, LogOut, Tag, CheckCircle } from "lucide-react";
+import { Checkbox } from "./components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
+import { Separator } from "./components/ui/separator";
+import { FileText, Users, BarChart3, Upload, User, LogOut, Tag, CheckCircle, Skip, Plus, X } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -269,17 +272,12 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [uploadFile, setUploadFile] = useState(null);
   const [activeTab, setActiveTab] = useState('upload');
-  const [domains] = useState([
-    "Economic Stability",
-    "Education Access and Quality", 
-    "Health Care Access and Quality",
-    "Neighborhood and Built Environment",
-    "Social and Community Context"
-  ]);
+  const [tagStructure, setTagStructure] = useState({});
 
   useEffect(() => {
     fetchDocuments();
     fetchAnalytics();
+    fetchTagStructure();
   }, []);
 
   const fetchDocuments = async () => {
@@ -297,6 +295,15 @@ const Dashboard = () => {
       setAnalytics(response.data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
+    }
+  };
+
+  const fetchTagStructure = async () => {
+    try {
+      const response = await axios.get(`${API}/tag-structure`);
+      setTagStructure(response.data.tag_structure);
+    } catch (error) {
+      console.error('Error fetching tag structure:', error);
     }
   };
 
@@ -340,19 +347,22 @@ const Dashboard = () => {
     }
   };
 
-  const createAnnotation = async (sentenceId, domain, tags, notes) => {
+  const createAnnotation = async (sentenceId, tags, notes, skipped = false) => {
     try {
       await axios.post(`${API}/annotations`, {
         sentence_id: sentenceId,
-        domain,
-        tags,
-        notes
+        tags: tags,
+        notes: notes,
+        skipped: skipped
       });
       
       // Refresh sentences to show new annotation
       if (selectedDocument) {
         loadDocumentSentences(selectedDocument);
       }
+      
+      // Refresh analytics
+      fetchAnalytics();
     } catch (error) {
       console.error('Error creating annotation:', error);
     }
@@ -436,11 +446,11 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           ) : (
-            <AnnotationInterface 
+            <StructuredAnnotationInterface 
               sentences={sentences}
               currentIndex={currentSentenceIndex}
               onIndexChange={setCurrentSentenceIndex}
-              domains={domains}
+              tagStructure={tagStructure}
               onAnnotate={createAnnotation}
             />
           )}
@@ -472,7 +482,7 @@ const Dashboard = () => {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
@@ -508,11 +518,37 @@ const Dashboard = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-2">
+                  <Tag className="h-5 w-5 text-emerald-600" />
+                  <div>
+                    <p className="text-sm text-gray-600">Tagged Sentences</p>
+                    <p className="text-2xl font-semibold">{analytics.tagged_sentences || 0}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
             
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
-                  <Users className="h-5 w-5 text-orange-600" />
+                  <Skip className="h-5 w-5 text-orange-600" />
+                  <div>
+                    <p className="text-sm text-gray-600">Skipped Sentences</p>
+                    <p className="text-2xl font-semibold">{analytics.skipped_sentences || 0}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-2">
+                  <Users className="h-5 w-5 text-indigo-600" />
                   <div>
                     <p className="text-sm text-gray-600">Annotators</p>
                     <p className="text-2xl font-semibold">{analytics.unique_annotators || 0}</p>
@@ -527,24 +563,63 @@ const Dashboard = () => {
   );
 };
 
-const AnnotationInterface = ({ sentences, currentIndex, onIndexChange, domains, onAnnotate }) => {
-  const [selectedDomain, setSelectedDomain] = useState('');
-  const [tags, setTags] = useState('');
+const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange, tagStructure, onAnnotate }) => {
+  const [selectedTags, setSelectedTags] = useState([]);
   const [notes, setNotes] = useState('');
   
   const currentSentence = sentences[currentIndex];
   
   if (!currentSentence) return null;
 
-  const handleAnnotate = async () => {
-    if (!selectedDomain || !tags.trim()) return;
+  const addTag = (domain, category, tag) => {
+    const newTag = {
+      domain,
+      category,
+      tag,
+      valence: 'positive' // Default valence
+    };
     
-    const tagList = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
-    await onAnnotate(currentSentence.id, selectedDomain, tagList, notes);
+    // Check if tag already exists
+    const exists = selectedTags.some(t => 
+      t.domain === domain && t.category === category && t.tag === tag
+    );
+    
+    if (!exists) {
+      setSelectedTags([...selectedTags, newTag]);
+    }
+  };
+
+  const removeTag = (index) => {
+    const newTags = [...selectedTags];
+    newTags.splice(index, 1);
+    setSelectedTags(newTags);
+  };
+
+  const updateTagValence = (index, valence) => {
+    const newTags = [...selectedTags];
+    newTags[index].valence = valence;
+    setSelectedTags(newTags);
+  };
+
+  const handleSaveAnnotation = async () => {
+    if (selectedTags.length === 0) return;
+    
+    await onAnnotate(currentSentence.id, selectedTags, notes);
     
     // Reset form and move to next sentence
-    setSelectedDomain('');
-    setTags('');
+    setSelectedTags([]);
+    setNotes('');
+    
+    if (currentIndex < sentences.length - 1) {
+      onIndexChange(currentIndex + 1);
+    }
+  };
+
+  const handleSkip = async () => {
+    await onAnnotate(currentSentence.id, [], notes, true);
+    
+    // Reset form and move to next sentence
+    setSelectedTags([]);
     setNotes('');
     
     if (currentIndex < sentences.length - 1) {
@@ -580,19 +655,37 @@ const AnnotationInterface = ({ sentences, currentIndex, onIndexChange, domains, 
               <div className="space-y-2">
                 {currentSentence.annotations.map((annotation, idx) => (
                   <div key={idx} className="p-3 bg-blue-50 rounded-md">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <Badge variant="outline">{annotation.domain}</Badge>
-                      <span className="text-sm text-gray-600">
-                        by User {annotation.user_id.slice(-6)}
-                      </span>
-                    </div>
-                    <p className="text-sm">
-                      Tags: {annotation.tags.join(', ')}
-                    </p>
-                    {annotation.notes && (
-                      <p className="text-sm text-gray-600 mt-1">
-                        Notes: {annotation.notes}
-                      </p>
+                    {annotation.skipped ? (
+                      <div className="flex items-center space-x-2">
+                        <Skip className="h-4 w-4 text-orange-600" />
+                        <span className="text-sm text-gray-600">
+                          Skipped by User {annotation.user_id.slice(-6)}
+                        </span>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="text-sm text-gray-600">
+                            by User {annotation.user_id.slice(-6)}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {annotation.tags.map((tag, tagIdx) => (
+                            <Badge 
+                              key={tagIdx} 
+                              variant={tag.valence === 'positive' ? 'default' : 'destructive'}
+                              className="text-xs"
+                            >
+                              {tag.domain}: {tag.tag} ({tag.valence})
+                            </Badge>
+                          ))}
+                        </div>
+                        {annotation.notes && (
+                          <p className="text-sm text-gray-600">
+                            Notes: {annotation.notes}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 ))}
@@ -600,67 +693,117 @@ const AnnotationInterface = ({ sentences, currentIndex, onIndexChange, domains, 
             </div>
           )}
 
-          {/* Annotation Form */}
-          <div className="space-y-4 border-t pt-4">
-            <h4 className="font-medium text-gray-900">Add New Annotation:</h4>
-            
+          {/* Selected Tags Display */}
+          {selectedTags.length > 0 && (
             <div className="space-y-2">
-              <Label>Social Determinant Domain</Label>
-              <select
-                value={selectedDomain}
-                onChange={(e) => setSelectedDomain(e.target.value)}
-                className="w-full p-2 border rounded-md"
-              >
-                <option value="">Select a domain...</option>
-                {domains.map((domain) => (
-                  <option key={domain} value={domain}>{domain}</option>
+              <h4 className="font-medium text-gray-900">Selected Tags:</h4>
+              <div className="space-y-2">
+                {selectedTags.map((tag, index) => (
+                  <div key={index} className="flex items-center space-x-2 p-2 bg-green-50 rounded">
+                    <Badge variant="outline">
+                      {tag.domain}: {tag.category} - {tag.tag}
+                    </Badge>
+                    <Select value={tag.valence} onValueChange={(value) => updateTagValence(index, value)}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="positive">Positive</SelectItem>
+                        <SelectItem value="negative">Negative</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => removeTag(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 ))}
-              </select>
+              </div>
             </div>
+          )}
 
-            <div className="space-y-2">
-              <Label>Tags (comma-separated)</Label>
-              <Input
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-                placeholder="e.g., housing instability, financial stress"
-              />
-            </div>
+          {/* Tag Selection Interface */}
+          <div className="space-y-4 border-t pt-4">
+            <h4 className="font-medium text-gray-900">Add Tags:</h4>
+            
+            {Object.entries(tagStructure).map(([domain, categories]) => (
+              <div key={domain} className="space-y-2">
+                <h5 className="text-sm font-medium text-blue-700">{domain}</h5>
+                <div className="grid gap-2">
+                  {Object.entries(categories).map(([category, tags]) => (
+                    <div key={category} className="space-y-1">
+                      <h6 className="text-xs font-medium text-gray-600">{category}</h6>
+                      <div className="flex flex-wrap gap-1">
+                        {tags.map((tag) => (
+                          <Button
+                            key={tag}
+                            size="sm"
+                            variant="outline"
+                            onClick={() => addTag(domain, category, tag)}
+                            className="text-xs h-6 px-2"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            {tag}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Separator />
+              </div>
+            ))}
+          </div>
 
-            <div className="space-y-2">
-              <Label>Notes (optional)</Label>
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Additional context or observations..."
-                rows={3}
-              />
-            </div>
+          {/* Notes */}
+          <div className="space-y-2">
+            <Label>Notes (optional)</Label>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Additional context or observations..."
+              rows={3}
+            />
+          </div>
 
-            <div className="flex space-x-2">
-              <Button
-                onClick={handleAnnotate}
-                disabled={!selectedDomain || !tags.trim()}
-              >
-                Save Annotation
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => onIndexChange(Math.max(0, currentIndex - 1))}
-                disabled={currentIndex === 0}
-              >
-                Previous
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => onIndexChange(Math.min(sentences.length - 1, currentIndex + 1))}
-                disabled={currentIndex === sentences.length - 1}
-              >
-                Next
-              </Button>
-            </div>
+          {/* Action Buttons */}
+          <div className="flex space-x-2">
+            <Button
+              onClick={handleSaveAnnotation}
+              disabled={selectedTags.length === 0}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Save Annotation
+            </Button>
+            
+            <Button
+              onClick={handleSkip}
+              variant="outline"
+              className="border-orange-300 text-orange-700 hover:bg-orange-50"
+            >
+              <Skip className="h-4 w-4 mr-2" />
+              Skip - No SDOH Content
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={() => onIndexChange(Math.max(0, currentIndex - 1))}
+              disabled={currentIndex === 0}
+            >
+              Previous
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={() => onIndexChange(Math.min(sentences.length - 1, currentIndex + 1))}
+              disabled={currentIndex === sentences.length - 1}
+            >
+              Next
+            </Button>
           </div>
         </CardContent>
       </Card>

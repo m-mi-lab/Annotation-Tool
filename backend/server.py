@@ -7,7 +7,7 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, EmailStr
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timedelta, timezone
 import jwt
@@ -39,7 +39,7 @@ api_router = APIRouter(prefix="/api")
 # Security
 security = HTTPBearer()
 
-# Social Determinants of Health Domains
+# Social Determinants of Health Domains and Structured Tags
 SDOH_DOMAINS = [
     "Economic Stability",
     "Education Access and Quality", 
@@ -47,6 +47,95 @@ SDOH_DOMAINS = [
     "Neighborhood and Built Environment",
     "Social and Community Context"
 ]
+
+# Structured tag definitions from the uploaded document
+SDOH_TAG_STRUCTURE = {
+    "Economic Stability": {
+        "Employment": [
+            "Employed", "Under-employed", "Unemployed", "Disabled", 
+            "Retired", "Homemaker", "Student", "Harmful Workplace"
+        ],
+        "Food Insecurity": [
+            "Low Food Security", "Very Low Food Security", 
+            "Physical Access Barrier", "Food Assistance Program"
+        ],
+        "Housing Instability": [
+            "Cost-Burdened Household", "Overcrowding", "Multiple Moves",
+            "Eviction or Foreclosure", "Substandard Housing", "Unhoused",
+            "Housing Assistance Program"
+        ],
+        "Poverty": [
+            "Below Poverty Threshold", "Low Socioeconomic Status", 
+            "Social Assistance Program"
+        ]
+    },
+    "Education Access and Quality": {
+        "Early Childhood Development and Education": [
+            "Early Learning Programs", "School Readiness Concern", "Developmental Delay",
+            "Reading Impairment", "Math Impairment", "Other Learning Disability",
+            "Early Intervention Services", "Learning Environment Concern"
+        ],
+        "Highest Level of Education": [
+            "Some High School", "High School Diploma or GED", 
+            "Some College or Associate Degree", "Bachelor's Degree",
+            "Graduate or Professional Degree"
+        ],
+        "Language and Literacy": [
+            "Language Barrier", "Low Health Literacy"
+        ]
+    },
+    "Health Care Access and Quality": {
+        "Access to Health Services": [
+            "No Local Services Available", "Barrier to Specialist Care",
+            "Insurance Coverage Limitations", "Financial Barriers to Medical Care"
+        ],
+        "Access to Primary Care": [
+            "No Primary Care Provider", "Extended Gaps in Care",
+            "Geographic Barriers to Care", "Limited Appointment Availability"
+        ],
+        "Health Literacy": [
+            "Difficulty Understanding Medical Information", 
+            "Limited Understanding of Preventative Care",
+            "Language Barriers Affecting Comprehension", 
+            "Digital Health Literacy Gaps"
+        ]
+    },
+    "Neighborhood and Built Environment": {
+        "Access to Healthy Foods": [
+            "Distance to Food Sources", "Limited Healthy Food Options",
+            "Food Environment Quality"
+        ],
+        "Crime and Violence": [
+            "Perceived Neighborhood Safety", "Reported Criminal Activity",
+            "Gang or Drug-Related Activity"
+        ],
+        "Environmental Conditions": [
+            "Air Quality Concerns", "Water Quality Issues",
+            "Proximity to Environmental Hazards"
+        ],
+        "Quality of Housing": [
+            "Structural Deficiencies", "Pest Infestation or Mold",
+            "Overcrowding or Unsafe Occupancy"
+        ]
+    },
+    "Social and Community Context": {
+        "Civic Participation": [
+            "Voting and Political Engagement", "Community or Religious Involvement",
+            "Volunteering or Service Activities"
+        ],
+        "Incarceration": [
+            "Current Incarceration", "History of Incarceration",
+            "Community Supervision"
+        ],
+        "Social Cohesion": [
+            "Supportive Relationships", "Social Isolation",
+            "Trust and Belonging in Community"
+        ],
+        "Experiences of Discrimination or Exclusion": [
+            "Race", "Ethnicity", "Gender", "Sexual Orientation", "Other Identity"
+        ]
+    }
+}
 
 # Models
 class User(BaseModel):
@@ -84,20 +173,26 @@ class Sentence(BaseModel):
     sentence_index: int
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class StructuredTag(BaseModel):
+    domain: str
+    category: str
+    tag: str
+    valence: str  # "positive" or "negative"
+
 class Annotation(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     sentence_id: str
     user_id: str
-    domain: str
-    tags: List[str]
+    tags: List[StructuredTag]
     notes: Optional[str] = ""
+    skipped: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class AnnotationCreate(BaseModel):
     sentence_id: str
-    domain: str
-    tags: List[str]
+    tags: List[StructuredTag]
     notes: Optional[str] = ""
+    skipped: bool = False
 
 # Authentication functions
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -270,13 +365,13 @@ async def get_document_sentences(
     current_user: User = Depends(get_current_user)
 ):
     sentences = await db.sentences.find(
-        {"document_id": document_id}, {"_id": 0}  # Exclude MongoDB _id field
+        {"document_id": document_id}, {"_id": 0}
     ).skip(skip).limit(limit).to_list(limit)
     
     # Get existing annotations for these sentences
     sentence_ids = [sentence['id'] for sentence in sentences]
     annotations = await db.annotations.find(
-        {"sentence_id": {"$in": sentence_ids}}, {"_id": 0}  # Exclude MongoDB _id field
+        {"sentence_id": {"$in": sentence_ids}}, {"_id": 0}
     ).to_list(1000)
     
     # Group annotations by sentence
@@ -296,18 +391,27 @@ async def create_annotation(
     annotation_data: AnnotationCreate,
     current_user: User = Depends(get_current_user)
 ):
-    if annotation_data.domain not in SDOH_DOMAINS:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid domain. Must be one of: {SDOH_DOMAINS}"
-        )
+    # Validate tags if not skipped
+    if not annotation_data.skipped:
+        for tag in annotation_data.tags:
+            if tag.domain not in SDOH_DOMAINS:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid domain: {tag.domain}. Must be one of: {SDOH_DOMAINS}"
+                )
+            
+            if tag.valence not in ["positive", "negative"]:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid valence: {tag.valence}. Must be 'positive' or 'negative'"
+                )
     
     annotation = Annotation(
         sentence_id=annotation_data.sentence_id,
         user_id=current_user.id,
-        domain=annotation_data.domain,
         tags=annotation_data.tags,
-        notes=annotation_data.notes
+        notes=annotation_data.notes,
+        skipped=annotation_data.skipped
     )
     
     await db.annotations.insert_one(annotation.dict())
@@ -321,6 +425,12 @@ async def get_sentence_annotations(
     annotations = await db.annotations.find({"sentence_id": sentence_id}, {"_id": 0}).to_list(1000)
     return annotations
 
+# Tag Structure Routes
+@api_router.get("/tag-structure")
+async def get_tag_structure():
+    """Get the structured tag definitions for annotation"""
+    return {"tag_structure": SDOH_TAG_STRUCTURE}
+
 # Analytics Routes
 @api_router.get("/analytics/overview")
 async def get_analytics_overview(current_user: User = Depends(get_current_user)):
@@ -330,8 +440,14 @@ async def get_analytics_overview(current_user: User = Depends(get_current_user))
     # Total sentences
     total_sentences = await db.sentences.count_documents({})
     
-    # Total annotations
+    # Total annotations (including skipped)
     total_annotations = await db.annotations.count_documents({})
+    
+    # Skipped sentences
+    skipped_sentences = await db.annotations.count_documents({"skipped": True})
+    
+    # Tagged sentences
+    tagged_sentences = await db.annotations.count_documents({"skipped": False})
     
     # Unique annotators
     unique_annotators = len(await db.annotations.distinct("user_id"))
@@ -340,18 +456,34 @@ async def get_analytics_overview(current_user: User = Depends(get_current_user))
         "total_documents": total_docs,
         "total_sentences": total_sentences,
         "total_annotations": total_annotations,
+        "tagged_sentences": tagged_sentences,
+        "skipped_sentences": skipped_sentences,
         "unique_annotators": unique_annotators
     }
 
-@api_router.get("/analytics/domain-prevalence")
-async def get_domain_prevalence(current_user: User = Depends(get_current_user)):
-    pipeline = [
-        {"$group": {"_id": "$domain", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}}
-    ]
+@api_router.get("/analytics/tag-prevalence")
+async def get_tag_prevalence(current_user: User = Depends(get_current_user)):
+    """Get tag prevalence across all annotations"""
+    annotations = await db.annotations.find({"skipped": False}, {"_id": 0}).to_list(10000)
     
-    results = await db.annotations.aggregate(pipeline).to_list(1000)
-    return {result['_id']: result['count'] for result in results}
+    tag_counts = defaultdict(int)
+    domain_counts = defaultdict(int)
+    category_counts = defaultdict(int)
+    valence_counts = {"positive": 0, "negative": 0}
+    
+    for annotation in annotations:
+        for tag in annotation.get('tags', []):
+            domain_counts[tag['domain']] += 1
+            category_counts[f"{tag['domain']} - {tag['category']}"] += 1
+            tag_counts[f"{tag['category']} - {tag['tag']}"] += 1
+            valence_counts[tag['valence']] += 1
+    
+    return {
+        "domain_counts": dict(domain_counts),
+        "category_counts": dict(category_counts),
+        "tag_counts": dict(tag_counts),
+        "valence_counts": valence_counts
+    }
 
 # System Routes
 @api_router.get("/")
