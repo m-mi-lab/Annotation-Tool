@@ -661,7 +661,7 @@ const Dashboard = () => {
                       {user?.role === 'admin' && (
                         <>
                           <Button
-                            onClick={() => downloadAnnotatedCsv(doc)}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); alert('CSV download clicked'); downloadAnnotatedCsv(doc); }}
                             variant="secondary"
                             size="sm"
                           >
