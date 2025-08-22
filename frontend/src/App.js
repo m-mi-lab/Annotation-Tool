@@ -727,8 +727,6 @@ const AdminManagementPanel = () => {
   };
 
   const deleteUser = (userId, userName) => {
-    console.log('deleteUser function called with:', { userId, userName });
-    
     // Prevent deleting yourself
     if (userId === currentUser?.id) {
       alert("You cannot delete your own account!");
@@ -745,14 +743,9 @@ const AdminManagementPanel = () => {
       'This action cannot be undone!'
     );
 
-    console.log('User confirmed deletion:', confirmed);
-
     if (!confirmed) {
-      console.log('User cancelled deletion');
       return;
     }
-
-    console.log('Proceeding with deletion...');
     
     // Set loading state
     setDeletingUserId(userId);
@@ -760,7 +753,6 @@ const AdminManagementPanel = () => {
     // Perform the deletion immediately
     axios.delete(`${API}/admin/users/${userId}`)
       .then((response) => {
-        console.log('Delete API response received:', response.status, response.data);
         alert(`User "${userName}" deleted successfully!`);
         // Force refresh the users list
         return fetchUsers();
@@ -771,9 +763,7 @@ const AdminManagementPanel = () => {
         alert('Error deleting user: ' + errorMessage);
       })
       .finally(() => {
-        console.log('Cleaning up deletion state');
         setDeletingUserId(null);
-        console.log('Delete process completed');
       });
   };
 
