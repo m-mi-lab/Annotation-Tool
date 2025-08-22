@@ -688,15 +688,11 @@ const AdminManagementPanel = () => {
 
   const fetchUsers = async () => {
     try {
-      setLoading(true);
       const response = await axios.get(`${API}/admin/users`);
       setUsers(response.data);
-      console.log('Users fetched:', response.data); // Debug log
     } catch (error) {
       console.error('Error fetching users:', error);
       alert('Error fetching users: ' + (error.response?.data?.detail || 'Please try again.'));
-    } finally {
-      setLoading(false);
     }
   };
 
