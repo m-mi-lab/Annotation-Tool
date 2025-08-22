@@ -661,6 +661,7 @@ const Dashboard = () => {
 };
 
 const AdminManagementPanel = () => {
+  const { user: currentUser } = useAuth(); // Get current user context
   const [users, setUsers] = useState([]);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [loading, setLoading] = useState(false);
