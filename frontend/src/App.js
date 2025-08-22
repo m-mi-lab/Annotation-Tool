@@ -1014,6 +1014,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
   const [selectAll, setSelectAll] = useState(false);
 
   const currentSentence = sentences[currentIndex];
+  const currentSubject = currentSentence?.subject_id || null;
 
   useEffect(() => {
     setSelectedTags([]); setNotes(''); setSelectedAnnIds([]); setSelectAll(false);
