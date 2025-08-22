@@ -271,7 +271,7 @@ def split_into_sentences(text: str) -> List[str]:
     cleaned_sentences = []
     for sentence in sentences:
         sentence = sentence.strip()
-        if len(sentence) &gt; 10:  # Minimum sentence length
+        if len(sentence) > 10:  # Minimum sentence length
             cleaned_sentences.append(sentence)
     
     return cleaned_sentences
