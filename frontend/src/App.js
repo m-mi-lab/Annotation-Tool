@@ -423,9 +423,13 @@ const Dashboard = () => {
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className={`grid w-full grid-cols-${tabsToShow.length}`}>
+        <TabsList className="inline-flex h-12 items-center justify-start rounded-lg bg-gray-100 p-1 text-gray-500 w-auto">
           {tabsToShow.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value} className="flex items-center space-x-2">
+            <TabsTrigger 
+              key={tab.value} 
+              value={tab.value} 
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm hover:bg-white/60 space-x-2"
+            >
               <tab.icon className="h-4 w-4" />
               <span>{tab.label}</span>
             </TabsTrigger>
