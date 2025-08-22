@@ -278,6 +278,7 @@ class SDOHAPITester:
         # Basic endpoint tests
         self.test_root_endpoint()
         self.test_domains_endpoint()
+        self.test_get_tag_structure()
         
         # Authentication tests
         if not self.test_user_registration():
@@ -295,13 +296,14 @@ class SDOHAPITester:
             if not self.test_get_document_sentences():
                 print("❌ Getting sentences failed, stopping annotation tests")
             else:
-                # Annotation tests
-                self.test_create_annotation()
+                # Annotation tests - test both structured and skipped annotations
+                self.test_create_structured_annotation()
+                self.test_create_skipped_annotation()
                 self.test_get_sentence_annotations()
         
         # Analytics tests
         self.test_analytics_overview()
-        self.test_domain_prevalence()
+        self.test_analytics_tag_prevalence()
         
         # Print final results
         print("\n" + "=" * 50)
