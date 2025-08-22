@@ -536,7 +536,7 @@ const Dashboard = () => {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
-                  <Skip className="h-5 w-5 text-orange-600" />
+                  <SkipForward className="h-5 w-5 text-orange-600" />
                   <div>
                     <p className="text-sm text-gray-600">Skipped Sentences</p>
                     <p className="text-2xl font-semibold">{analytics.skipped_sentences || 0}</p>
