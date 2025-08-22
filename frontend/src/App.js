@@ -345,11 +345,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleAnnotateClick = (documentId) => {
-    console.log('=== handleAnnotateClick CALLED ===', documentId);
-    loadDocumentSentences(documentId);
-  };
-
   const loadDocumentSentences = async (documentId) => {
     try {
       const response = await axios.get(`${API}/documents/${documentId}/sentences`);
