@@ -249,6 +249,8 @@ const Dashboard = () => {
     fetchAnalytics();
     fetchTagStructure();
     fetchResources();
+    fetchEnhancedAnalytics();
+    fetchTagPrevalence();
     // eslint-disable-next-line
   }, []);
 
