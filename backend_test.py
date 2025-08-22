@@ -175,21 +175,74 @@ class SDOHAPITester:
         
         return success
 
-    def test_create_annotation(self):
-        """Test creating an annotation"""
+    def test_get_tag_structure(self):
+        """Test getting the structured tag definitions"""
+        return self.run_test("Get Tag Structure", "GET", "tag-structure", 200)
+
+    def test_create_structured_annotation(self):
+        """Test creating a structured annotation with new format"""
         if not self.test_sentence_id:
             print("❌ No test sentence ID available")
             return False
             
+        # Test structured annotation with multiple tags and valences
         annotation_data = {
             "sentence_id": self.test_sentence_id,
-            "domain": "Economic Stability",
-            "tags": ["financial hardship", "medication access", "job loss"],
-            "notes": "Patient reports difficulty affording insulin due to unemployment"
+            "tags": [
+                {
+                    "domain": "Economic Stability",
+                    "category": "Employment", 
+                    "tag": "Unemployed",
+                    "valence": "negative"
+                },
+                {
+                    "domain": "Economic Stability",
+                    "category": "Poverty",
+                    "tag": "Below Poverty Threshold", 
+                    "valence": "negative"
+                }
+            ],
+            "notes": "Patient reports job loss affecting medication access",
+            "skipped": False
         }
         
         return self.run_test(
-            "Create Annotation",
+            "Create Structured Annotation",
+            "POST",
+            "annotations",
+            200,
+            data=annotation_data
+        )
+
+    def test_create_skipped_annotation(self):
+        """Test creating a skipped annotation"""
+        if not self.test_sentence_id:
+            print("❌ No test sentence ID available")
+            return False
+            
+        # Create another sentence for skip test
+        success, sentences_response = self.run_test(
+            "Get Document Sentences for Skip Test",
+            "GET", 
+            f"documents/{self.test_document_id}/sentences",
+            200
+        )
+        
+        if not success or len(sentences_response) < 2:
+            print("❌ Need at least 2 sentences for skip test")
+            return False
+            
+        skip_sentence_id = sentences_response[1]['id']
+        
+        annotation_data = {
+            "sentence_id": skip_sentence_id,
+            "tags": [],
+            "notes": "No SDOH content found in this sentence",
+            "skipped": True
+        }
+        
+        return self.run_test(
+            "Create Skipped Annotation",
             "POST",
             "annotations",
             200,
