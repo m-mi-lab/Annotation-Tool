@@ -759,21 +759,40 @@ const AdminManagementPanel = () => {
       const response = await axios.delete(`${API}/admin/users/${userId}`);
       console.log('Delete response:', response.status, response.data);
       
-      // Immediately remove the user from the UI state (optimistic update)
-      console.log('Optimistically removing user from UI...');
-      setUsers(prevUsers => {
-        const updatedUsers = prevUsers.filter(user => user.id !== userId);
-        console.log(`Removed user from state. User count: ${prevUsers.length} -> ${updatedUsers.length}`);
-        return updatedUsers;
-      });
-      
-      // Show success message
-      alert(`User "${userName}" deleted successfully!`);
-      
-      // Also refresh from server to ensure consistency (but don't wait for it)
-      fetchUsers().catch(error => {
-        console.error('Error refreshing user list after deletion:', error);
-      });
+      if (response.status === 200) {
+        console.log('Delete successful, updating UI immediately...');
+        
+        // Force immediate UI update with new array
+        const currentUsers = [...users];
+        const updatedUsers = currentUsers.filter(user => user.id !== userId);
+        console.log(`Force updating users list: ${currentUsers.length} -> ${updatedUsers.length}`);
+        
+        // Multiple update approaches to ensure it works
+        setUsers([...updatedUsers]); // Force new array reference
+        
+        // Force component re-render
+        setTimeout(() => {
+          setUsers(prev => prev.filter(u => u.id !== userId));
+        }, 100);
+        
+        // Show success message
+        alert(`User "${userName}" has been deleted and removed from the list!`);
+        
+        // Additional refresh after a short delay
+        setTimeout(async () => {
+          console.log('Performing additional refresh...');
+          try {
+            const refreshResponse = await axios.get(`${API}/admin/users`);
+            setUsers([...refreshResponse.data]);
+            console.log('Additional refresh completed');
+          } catch (err) {
+            console.error('Additional refresh failed:', err);
+          }
+        }, 500);
+        
+      } else {
+        throw new Error(`Delete failed with status: ${response.status}`);
+      }
       
     } catch (error) {
       console.error('Error during deletion:', error);
@@ -782,7 +801,12 @@ const AdminManagementPanel = () => {
       alert('Error deleting user: ' + errorMessage);
       
       // Refresh the list in case of error to ensure accuracy
-      await fetchUsers();
+      try {
+        const refreshResponse = await axios.get(`${API}/admin/users`);
+        setUsers([...refreshResponse.data]);
+      } catch (refreshError) {
+        console.error('Error refreshing after failed deletion:', refreshError);
+      }
     } finally {
       console.log('Cleaning up loading state');
       setDeletingUserId(null);
