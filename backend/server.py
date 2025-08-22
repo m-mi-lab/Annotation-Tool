@@ -431,12 +431,23 @@ async def upload_document(file: UploadFile = File(...), project_name: Optional[s
     for row in csv_reader:
         # Extract subject id
         subject_val = None
+        # 1) Try configured subject keys (exact, case-insensitive)
         for key in row.keys():
             if key and any(sk == key.strip().lower() for sk in SUBJECT_KEYS):
                 val = row.get(key)
                 if val and isinstance(val, str) and val.strip():
                     subject_val = val.strip()
                     break
+        # 2) Fallback to common index column names
+        if subject_val is None:
+            for key in row.keys():
+                if key and key.strip().lower() in ["index", "idx", "row", "row_id"]:
+                    val = row.get(key)
+                    subject_val = (str(val).strip() if val is not None else None)
+                    if subject_val:
+                        break
+        # 3) Final fallback: use running sentence_index group marker (row number)
+        # Note: We'll keep subject_val None if no column found; UI will show N/A.
         # Extract text
         text_content = ""
         for key, value in row.items():
