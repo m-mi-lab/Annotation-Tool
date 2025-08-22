@@ -716,39 +716,48 @@ const AdminManagementPanel = () => {
     }
   };
 
-  const deleteUser = async (userId, userName) => {
+  const deleteUser = (userId, userName) => {
     console.log('deleteUser function called with:', { userId, userName }); // Debug log
     
+    // Enhanced confirmation dialog
+    const confirmed = window.confirm(
+      `Are you sure you want to delete the user "${userName}"?\n\n` +
+      'This will permanently remove:\n' +
+      '• The user account\n' +
+      '• All their annotations\n' +
+      '• Their login access\n\n' +
+      'This action cannot be undone!'
+    );
+
+    console.log('User confirmed deletion:', confirmed); // Debug log
+
+    if (!confirmed) {
+      console.log('User cancelled deletion'); // Debug log
+      return;
+    }
+
+    console.log('Proceeding with deletion...'); // Debug log
+    
+    // Set loading state
+    setDeletingUserId(userId);
+    
+    // Perform the deletion
+    performUserDeletion(userId, userName);
+  };
+
+  const performUserDeletion = async (userId, userName) => {
     try {
-      // Enhanced confirmation dialog
-      const confirmed = window.confirm(
-        `Are you sure you want to delete the user "${userName}"?\n\n` +
-        'This will permanently remove:\n' +
-        '• The user account\n' +
-        '• All their annotations\n' +
-        '• Their login access\n\n' +
-        'This action cannot be undone!'
-      );
-
-      console.log('User confirmed deletion:', confirmed); // Debug log
-
-      if (!confirmed) {
-        console.log('User cancelled deletion'); // Debug log
-        return;
-      }
-
-      console.log('Proceeding with deletion...'); // Debug log
-      setDeletingUserId(userId);
-      
       console.log('Making API call to delete user:', userId); // Debug log
+      
       const response = await axios.delete(`${API}/admin/users/${userId}`, {
         timeout: 10000 // 10 second timeout
       });
+      
       console.log('Delete API response received:', response.status, response.data); // Debug log
       
       // Show success message
       console.log('Showing success message'); // Debug log
-      alert('User deleted successfully!');
+      alert(`User "${userName}" deleted successfully!`);
       
       // Refresh the users list
       console.log('Refreshing user list...'); // Debug log
@@ -756,7 +765,7 @@ const AdminManagementPanel = () => {
       console.log('User list refreshed'); // Debug log
       
     } catch (error) {
-      console.error('Error in deleteUser function:', error);
+      console.error('Error in performUserDeletion:', error);
       const errorMessage = error.response?.data?.detail || 'Failed to delete user. Please try again.';
       alert('Error deleting user: ' + errorMessage);
     } finally {
