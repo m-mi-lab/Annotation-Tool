@@ -1130,7 +1130,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                             </span>
                           </div>
                           {canDelete && (
-                            <Button size="sm" variant="ghost" onClick={() => onDeleteAnnotation(annotation.id, currentSentence.id)}>
+                            <Button size="sm" variant="ghost" onClick={(e) => { e.preventDefault(); e.stopPropagation(); alert('Delete annotation clicked'); onDeleteAnnotation(annotation.id, currentSentence.id); }}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           )}
