@@ -728,8 +728,11 @@ const AdminManagementPanel = () => {
     }
 
     try {
-      setLoading(true);
+      setDeletingUserId(userId);
+      console.log('Deleting user:', userId); // Debug log
+      
       const response = await axios.delete(`${API}/admin/users/${userId}`);
+      console.log('Delete response:', response.data); // Debug log
       
       // Show success message
       alert('User deleted successfully!');
@@ -742,7 +745,7 @@ const AdminManagementPanel = () => {
       const errorMessage = error.response?.data?.detail || 'Failed to delete user. Please try again.';
       alert('Error deleting user: ' + errorMessage);
     } finally {
-      setLoading(false);
+      setDeletingUserId(null);
     }
   };
 
