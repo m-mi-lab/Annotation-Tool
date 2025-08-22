@@ -14,7 +14,7 @@ import { Progress } from "./components/ui/progress";
 import { Checkbox } from "./components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
 import { Separator } from "./components/ui/separator";
-import { FileText, Users, BarChart3, Upload, User, LogOut, Tag, CheckCircle, Skip, Plus, X } from "lucide-react";
+import { FileText, Users, BarChart3, Upload, User, LogOut, Tag, CheckCircle, Plus, X } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
