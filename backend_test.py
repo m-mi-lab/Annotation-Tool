@@ -266,9 +266,9 @@ class SDOHAPITester:
         """Test analytics overview endpoint"""
         return self.run_test("Analytics Overview", "GET", "analytics/overview", 200)
 
-    def test_domain_prevalence(self):
-        """Test domain prevalence analytics"""
-        return self.run_test("Domain Prevalence", "GET", "analytics/domain-prevalence", 200)
+    def test_analytics_tag_prevalence(self):
+        """Test tag prevalence analytics (updated endpoint)"""
+        return self.run_test("Tag Prevalence Analytics", "GET", "analytics/tag-prevalence", 200)
 
     def run_all_tests(self):
         """Run all API tests in sequence"""
