@@ -14,7 +14,8 @@ import { Progress } from "./components/ui/progress";
 import { Checkbox } from "./components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
 import { Separator } from "./components/ui/separator";
-import { FileText, Users, BarChart3, Upload, User, LogOut, Tag, CheckCircle, Plus, X, SkipForward } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./components/ui/dialog";
+import { FileText, Users, BarChart3, Upload, User, LogOut, Tag, CheckCircle, Plus, X, SkipForward, Shield, Settings, Trash2, Edit, Eye } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -64,12 +65,13 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (email, password, fullName) => {
+  const register = async (email, password, fullName, role = 'annotator') => {
     try {
       await axios.post(`${API}/auth/register`, {
         email,
         password,
-        full_name: fullName
+        full_name: fullName,
+        role
       });
       
       // Auto-login after registration
@@ -124,8 +126,14 @@ const Header = () => {
           {user && (
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
+                {user.role === 'admin' && (
+                  <Shield className="h-4 w-4 text-purple-600" title="Administrator" />
+                )}
                 <User className="h-4 w-4 text-gray-500" />
                 <span className="text-sm text-gray-700">{user.full_name}</span>
+                <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                  {user.role}
+                </Badge>
               </div>
               <Button
                 variant="ghost"
@@ -264,6 +272,7 @@ const AuthForm = () => {
 };
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [documents, setDocuments] = useState([]);
   const [analytics, setAnalytics] = useState({});
   const [selectedDocument, setSelectedDocument] = useState(null);
@@ -271,8 +280,10 @@ const Dashboard = () => {
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [uploadFile, setUploadFile] = useState(null);
-  const [activeTab, setActiveTab] = useState('upload');
+  const [activeTab, setActiveTab] = useState(user?.role === 'admin' ? 'manage' : 'documents');
   const [tagStructure, setTagStructure] = useState({});
+  const [projectName, setProjectName] = useState('');
+  const [projectDescription, setProjectDescription] = useState('');
 
   useEffect(() => {
     fetchDocuments();
@@ -313,6 +324,8 @@ const Dashboard = () => {
     setLoading(true);
     const formData = new FormData();
     formData.append('file', uploadFile);
+    if (projectName) formData.append('project_name', projectName);
+    if (projectDescription) formData.append('description', projectDescription);
 
     try {
       await axios.post(`${API}/documents/upload`, formData, {
@@ -320,10 +333,13 @@ const Dashboard = () => {
       });
       
       setUploadFile(null);
+      setProjectName('');
+      setProjectDescription('');
       fetchDocuments();
       fetchAnalytics();
     } catch (error) {
       console.error('Error uploading file:', error);
+      alert('Error uploading file. ' + (error.response?.data?.detail || 'Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -368,57 +384,115 @@ const Dashboard = () => {
     }
   };
 
+  const deleteDocument = async (documentId) => {
+    if (!window.confirm('Are you sure you want to delete this document? This will also delete all associated annotations.')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/admin/documents/${documentId}`);
+      fetchDocuments();
+      fetchAnalytics();
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      alert('Error deleting document: ' + (error.response?.data?.detail || 'Please try again.'));
+    }
+  };
+
+  // Determine which tabs to show based on user role
+  const getTabsForUser = () => {
+    if (user?.role === 'admin') {
+      return [
+        { value: 'manage', label: 'Manage', icon: Settings },
+        { value: 'upload', label: 'Upload', icon: Upload },
+        { value: 'documents', label: 'Documents', icon: FileText },
+        { value: 'annotate', label: 'Annotate', icon: Tag },
+        { value: 'analytics', label: 'Analytics', icon: BarChart3 }
+      ];
+    } else {
+      return [
+        { value: 'documents', label: 'Documents', icon: FileText },
+        { value: 'annotate', label: 'Annotate', icon: Tag },
+        { value: 'analytics', label: 'Analytics', icon: BarChart3 }
+      ];
+    }
+  };
+
+  const tabsToShow = getTabsForUser();
+
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="upload" className="flex items-center space-x-2">
-            <Upload className="h-4 w-4" />
-            <span>Upload</span>
-          </TabsTrigger>
-          <TabsTrigger value="annotate" className="flex items-center space-x-2">
-            <Tag className="h-4 w-4" />
-            <span>Annotate</span>
-          </TabsTrigger>
-          <TabsTrigger value="documents" className="flex items-center space-x-2">
-            <FileText className="h-4 w-4" />
-            <span>Documents</span>
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center space-x-2">
-            <BarChart3 className="h-4 w-4" />
-            <span>Analytics</span>
-          </TabsTrigger>
+        <TabsList className={`grid w-full grid-cols-${tabsToShow.length}`}>
+          {tabsToShow.map((tab) => (
+            <TabsTrigger key={tab.value} value={tab.value} className="flex items-center space-x-2">
+              <tab.icon className="h-4 w-4" />
+              <span>{tab.label}</span>
+            </TabsTrigger>
+          ))}
         </TabsList>
 
-        <TabsContent value="upload" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Upload CSV Document</CardTitle>
-              <p className="text-sm text-gray-600">
-                Upload a CSV file containing discharge summaries for annotation
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="csvFile">Select CSV File</Label>
-                <Input
-                  id="csvFile"
-                  type="file"
-                  accept=".csv"
-                  onChange={(e) => setUploadFile(e.target.files[0])}
-                />
-              </div>
-              
-              <Button 
-                onClick={handleFileUpload}
-                disabled={!uploadFile || loading}
-                className="w-full"
-              >
-                {loading ? 'Uploading...' : 'Upload Document'}
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* Admin Management Tab */}
+        {user?.role === 'admin' && (
+          <TabsContent value="manage" className="space-y-4">
+            <AdminManagementPanel />
+          </TabsContent>
+        )}
+
+        {/* Admin Upload Tab */}
+        {user?.role === 'admin' && (
+          <TabsContent value="upload" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Upload CSV Document</CardTitle>
+                <p className="text-sm text-gray-600">
+                  Upload a CSV file containing discharge summaries for annotation by the team
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="projectName">Project Name (Optional)</Label>
+                  <Input
+                    id="projectName"
+                    type="text"
+                    value={projectName}
+                    onChange={(e) => setProjectName(e.target.value)}
+                    placeholder="e.g., Hospital XYZ Discharge Analysis"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="projectDescription">Description (Optional)</Label>
+                  <Textarea
+                    id="projectDescription"
+                    value={projectDescription}
+                    onChange={(e) => setProjectDescription(e.target.value)}
+                    placeholder="Brief description of the annotation project..."
+                    rows={3}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="csvFile">Select CSV File</Label>
+                  <Input
+                    id="csvFile"
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => setUploadFile(e.target.files[0])}
+                  />
+                </div>
+                
+                <Button 
+                  onClick={handleFileUpload}
+                  disabled={!uploadFile || loading}
+                  className="w-full"
+                >
+                  {loading ? 'Uploading...' : 'Upload Document for Team Annotation'}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         <TabsContent value="annotate" className="space-y-4">
           {!selectedDocument ? (
@@ -462,18 +536,37 @@ const Dashboard = () => {
               <Card key={doc.id} className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium">{doc.filename}</h3>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h3 className="font-medium">{doc.filename}</h3>
+                        {doc.project_name && (
+                          <Badge variant="outline">{doc.project_name}</Badge>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-600">
                         {doc.total_sentences} sentences • Uploaded {new Date(doc.upload_date).toLocaleDateString()}
                       </p>
+                      {doc.description && (
+                        <p className="text-xs text-gray-500 mt-1">{doc.description}</p>
+                      )}
                     </div>
-                    <Button
-                      onClick={() => handleAnnotateClick(doc.id)}
-                      variant="outline"
-                    >
-                      Annotate
-                    </Button>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        onClick={() => handleAnnotateClick(doc.id)}
+                        variant="outline"
+                      >
+                        Annotate
+                      </Button>
+                      {user?.role === 'admin' && (
+                        <Button
+                          onClick={() => deleteDocument(doc.id)}
+                          variant="destructive"
+                          size="sm"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -559,6 +652,190 @@ const Dashboard = () => {
           </div>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+};
+
+const AdminManagementPanel = () => {
+  const [users, setUsers] = useState([]);
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [newUser, setNewUser] = useState({
+    email: '',
+    password: '',
+    full_name: '',
+    role: 'annotator'
+  });
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get(`${API}/admin/users`);
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+  const createUser = async () => {
+    setLoading(true);
+    try {
+      await axios.post(`${API}/admin/users`, newUser);
+      setNewUser({ email: '', password: '', full_name: '', role: 'annotator' });
+      setShowCreateUser(false);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error creating user:', error);
+      alert('Error creating user: ' + (error.response?.data?.detail || 'Please try again.'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleUserStatus = async (userId, currentStatus) => {
+    try {
+      await axios.put(`${API}/admin/users/${userId}`, {
+        is_active: !currentStatus
+      });
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating user status:', error);
+    }
+  };
+
+  const deleteUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/admin/users/${userId}`);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert('Error deleting user: ' + (error.response?.data?.detail || 'Please try again.'));
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>User Management</CardTitle>
+            <Button onClick={() => setShowCreateUser(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add User
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {users.map((user) => (
+              <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    {user.role === 'admin' && <Shield className="h-4 w-4 text-purple-600" />}
+                    <User className="h-4 w-4 text-gray-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{user.full_name}</p>
+                    <p className="text-sm text-gray-600">{user.email}</p>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                        {user.role}
+                      </Badge>
+                      <Badge variant={user.is_active ? 'outline' : 'destructive'}>
+                        {user.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => toggleUserStatus(user.id, user.is_active)}
+                  >
+                    {user.is_active ? 'Deactivate' : 'Activate'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => deleteUser(user.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {showCreateUser && (
+        <Dialog open={showCreateUser} onOpenChange={setShowCreateUser}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New User</DialogTitle>
+              <DialogDescription>
+                Add a new annotator or administrator to the system
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label>Full Name</Label>
+                <Input
+                  value={newUser.full_name}
+                  onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })}
+                  placeholder="Enter full name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                  placeholder="Enter email address"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Password</Label>
+                <Input
+                  type="password"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                  placeholder="Enter password"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Role</Label>
+                <Select value={newUser.role} onValueChange={(value) => setNewUser({ ...newUser, role: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="annotator">Annotator</SelectItem>
+                    <SelectItem value="admin">Administrator</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowCreateUser(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={createUser} disabled={loading}>
+                  {loading ? 'Creating...' : 'Create User'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

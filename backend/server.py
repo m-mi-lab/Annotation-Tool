@@ -39,6 +39,11 @@ api_router = APIRouter(prefix="/api")
 # Security
 security = HTTPBearer()
 
+# User Roles
+class UserRole:
+    ADMIN = "admin"
+    ANNOTATOR = "annotator"
+
 # Social Determinants of Health Domains and Structured Tags
 SDOH_DOMAINS = [
     "Economic Stability",
@@ -142,6 +147,7 @@ class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     email: EmailStr
     full_name: str
+    role: str = UserRole.ANNOTATOR  # default role
     is_active: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -149,6 +155,12 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     full_name: str
+    role: str = UserRole.ANNOTATOR
+
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    role: Optional[str] = None
+    is_active: Optional[bool] = None
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -165,6 +177,8 @@ class Document(BaseModel):
     upload_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     total_sentences: int = 0
     processed: bool = False
+    project_name: Optional[str] = None
+    description: Optional[str] = None
 
 class Sentence(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -193,6 +207,10 @@ class AnnotationCreate(BaseModel):
     tags: List[StructuredTag]
     notes: Optional[str] = ""
     skipped: bool = False
+
+class DocumentUpload(BaseModel):
+    project_name: Optional[str] = None
+    description: Optional[str] = None
 
 # Authentication functions
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -223,6 +241,14 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     if user is None:
         raise credentials_exception
     return User(**user)
+
+async def get_admin_user(current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return current_user
 
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -260,11 +286,19 @@ async def register_user(user_data: UserCreate):
             detail="Email already registered"
         )
     
+    # Validate role
+    if user_data.role not in [UserRole.ADMIN, UserRole.ANNOTATOR]:
+        user_data.role = UserRole.ANNOTATOR
+    
     # Hash password and create user
     hashed_password = hash_password(user_data.password)
     user_dict = user_data.dict()
     user_dict['password'] = hashed_password
-    user_obj = User(email=user_data.email, full_name=user_data.full_name)
+    user_obj = User(
+        email=user_data.email, 
+        full_name=user_data.full_name,
+        role=user_data.role
+    )
     
     # Store in database
     user_dict['id'] = user_obj.id
@@ -284,6 +318,12 @@ async def login_user(login_data: UserLogin):
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    if not user.get('is_active', True):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is deactivated"
+        )
+    
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user['email']}, expires_delta=access_token_expires
@@ -294,12 +334,108 @@ async def login_user(login_data: UserLogin):
 async def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
 
+# Admin Routes
+@api_router.get("/admin/users", response_model=List[User])
+async def get_all_users(admin_user: User = Depends(get_admin_user)):
+    """Admin only: Get all users"""
+    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(1000)
+    return [User(**user) for user in users]
+
+@api_router.post("/admin/users", response_model=User)
+async def create_user_by_admin(
+    user_data: UserCreate,
+    admin_user: User = Depends(get_admin_user)
+):
+    """Admin only: Create new user account"""
+    # Check if user already exists
+    existing_user = await db.users.find_one({"email": user_data.email})
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    # Validate role
+    if user_data.role not in [UserRole.ADMIN, UserRole.ANNOTATOR]:
+        user_data.role = UserRole.ANNOTATOR
+    
+    # Hash password and create user
+    hashed_password = hash_password(user_data.password)
+    user_dict = user_data.dict()
+    user_dict['password'] = hashed_password
+    user_obj = User(
+        email=user_data.email, 
+        full_name=user_data.full_name,
+        role=user_data.role
+    )
+    
+    # Store in database
+    user_dict['id'] = user_obj.id
+    user_dict['is_active'] = user_obj.is_active
+    user_dict['created_at'] = user_obj.created_at
+    
+    await db.users.insert_one(user_dict)
+    return user_obj
+
+@api_router.put("/admin/users/{user_id}", response_model=User)
+async def update_user_by_admin(
+    user_id: str,
+    user_update: UserUpdate,
+    admin_user: User = Depends(get_admin_user)
+):
+    """Admin only: Update user account"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Update fields
+    update_data = {}
+    if user_update.full_name is not None:
+        update_data["full_name"] = user_update.full_name
+    if user_update.role is not None and user_update.role in [UserRole.ADMIN, UserRole.ANNOTATOR]:
+        update_data["role"] = user_update.role
+    if user_update.is_active is not None:
+        update_data["is_active"] = user_update.is_active
+    
+    if update_data:
+        await db.users.update_one({"id": user_id}, {"$set": update_data})
+        updated_user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+        return User(**updated_user)
+    
+    return User(**{k: v for k, v in user.items() if k != "password"})
+
+@api_router.delete("/admin/users/{user_id}")
+async def delete_user_by_admin(
+    user_id: str,
+    admin_user: User = Depends(get_admin_user)
+):
+    """Admin only: Delete user account"""
+    result = await db.users.delete_one({"id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    return {"message": "User deleted successfully"}
+
 # Document Routes
 @api_router.post("/documents/upload", response_model=Document)
 async def upload_document(
     file: UploadFile = File(...),
+    project_name: Optional[str] = None,
+    description: Optional[str] = None,
     current_user: User = Depends(get_current_user)
 ):
+    # Only admins can upload documents
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can upload documents"
+        )
+    
     if not file.filename.endswith('.csv'):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -313,7 +449,9 @@ async def upload_document(
     # Create document record
     document = Document(
         filename=file.filename,
-        uploaded_by=current_user.id
+        uploaded_by=current_user.id,
+        project_name=project_name,
+        description=description
     )
     
     # Parse CSV and extract text
@@ -354,6 +492,7 @@ async def upload_document(
 
 @api_router.get("/documents", response_model=List[Document])
 async def get_documents(current_user: User = Depends(get_current_user)):
+    # All users can see all documents (uploaded by admins)
     documents = await db.documents.find({}, {"_id": 0}).to_list(1000)
     return [Document(**doc) for doc in documents]
 
@@ -384,6 +523,32 @@ async def get_document_sentences(
         sentence['annotations'] = annotations_by_sentence.get(sentence['id'], [])
     
     return sentences
+
+@api_router.delete("/admin/documents/{document_id}")
+async def delete_document(
+    document_id: str,
+    admin_user: User = Depends(get_admin_user)
+):
+    """Admin only: Delete document and all related sentences and annotations"""
+    # Delete annotations first
+    await db.annotations.delete_many({"sentence_id": {"$in": [
+        sentence["id"] for sentence in await db.sentences.find(
+            {"document_id": document_id}, {"id": 1}
+        ).to_list(10000)
+    ]}})
+    
+    # Delete sentences
+    await db.sentences.delete_many({"document_id": document_id})
+    
+    # Delete document
+    result = await db.documents.delete_one({"id": document_id})
+    if result.deleted_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found"
+        )
+    
+    return {"message": "Document deleted successfully"}
 
 # Annotation Routes
 @api_router.post("/annotations", response_model=Annotation)
@@ -484,6 +649,28 @@ async def get_tag_prevalence(current_user: User = Depends(get_current_user)):
         "tag_counts": dict(tag_counts),
         "valence_counts": valence_counts
     }
+
+@api_router.get("/admin/analytics/users")
+async def get_user_analytics(admin_user: User = Depends(get_admin_user)):
+    """Admin only: Get detailed user analytics"""
+    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(1000)
+    
+    # Get annotation counts per user
+    user_annotations = {}
+    for user in users:
+        user_id = user['id']
+        total_annotations = await db.annotations.count_documents({"user_id": user_id})
+        tagged_count = await db.annotations.count_documents({"user_id": user_id, "skipped": False})
+        skipped_count = await db.annotations.count_documents({"user_id": user_id, "skipped": True})
+        
+        user_annotations[user_id] = {
+            "user": User(**user),
+            "total_annotations": total_annotations,
+            "tagged_annotations": tagged_count,
+            "skipped_annotations": skipped_count
+        }
+    
+    return user_annotations
 
 # System Routes
 @api_router.get("/")
