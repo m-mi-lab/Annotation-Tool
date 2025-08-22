@@ -374,6 +374,20 @@ const Dashboard = () => {
       return;
     }
 
+    // Optimistic UI update
+    let previousSentences;
+    setSentences((prev) => {
+      previousSentences = prev;
+      if (!sentenceId) return prev;
+      return prev.map((s) => {
+        if (s.id !== sentenceId) return s;
+        return {
+          ...s,
+          annotations: (s.annotations || []).filter((a) => a.id !== annotationId),
+        };
+      });
+    });
+
     try {
       await axios.delete(`${API}/annotations/${annotationId}`);
       
@@ -388,6 +402,8 @@ const Dashboard = () => {
       fetchAnalytics();
     } catch (error) {
       console.error('Error deleting annotation:', error);
+      // Rollback optimistic update if failed
+      if (previousSentences) setSentences(previousSentences);
       alert('Error deleting annotation: ' + (error.response?.data?.detail || 'Please try again.'));
     }
   };
