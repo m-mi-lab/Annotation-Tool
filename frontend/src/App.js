@@ -214,6 +214,83 @@ const Home = () => {
   );
 };
 
+// Active Docs Panel component (me vs team)
+const ActiveDocsPanel = ({ onOpenDoc }) => {
+  const { user } = useAuth();
+  const [scope, setScope] = useState('me');
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchActive = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API}/annotations/active-docs`, { params: { scope } });
+      setItems(res.data || []);
+    } catch (err) {
+      // noop
+    } finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchActive(); }, [scope]);
+
+  if (!items.length && !loading) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Active Documents</CardTitle>
+          <div className="flex items-center gap-2">
+            <Label>View:</Label>
+            <Select value={scope} onValueChange={setScope}>
+              <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="me">Me</SelectItem>
+                {user?.role === 'admin' && <SelectItem value="team">Team</SelectItem>}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <div className="text-sm text-gray-600">Loading active documents...</div>
+        ) : (
+          <div className="space-y-3">
+            {items.map((it) => (
+              <div key={it.document_id} className="p-3 border rounded-md">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium">{it.filename}</div>
+                    <div className="text-xs text-gray-500">{it.annotated_count}/{it.total_sentences} sentences</div>
+                  </div>
+                  <div className="w-64">
+                    <div className="h-2 bg-gray-200 rounded"><div className="h-2 bg-blue-600 rounded" style={{ width: `${Math.round(it.progress*100)}%` }}></div></div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {typeof it.last_annotation_index === 'number' && (
+                      <Button size="sm" variant="outline" onClick={() => onOpenDoc(it.document_id)}>Resume</Button>
+                    )}
+                    <Button size="sm" onClick={() => onOpenDoc(it.document_id)}>Open</Button>
+                  </div>
+                </div>
+                {it.subjects && it.subjects.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {it.subjects.slice(0, 30).map((sub) => (
+                      <span key={sub} className="px-2 py-1 text-xs rounded bg-gray-100 border">{sub}</span>
+                    ))}
+                    {it.subjects.length > 30 && <span className="text-xs text-gray-500">+{it.subjects.length - 30} more</span>}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
 // Dashboard
 const Dashboard = () => {
   const { user } = useAuth();
