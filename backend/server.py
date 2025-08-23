@@ -672,6 +672,27 @@ async def get_tag_prevalence_chart(current_user: User = Depends(get_current_user
     buf = BytesIO(); plt.savefig(buf, format='png'); buf.seek(0)
     return StreamingResponse(buf, media_type='image/png')
 
+@api_router.get("/analytics/valence-chart")
+async def get_valence_chart(current_user: User = Depends(get_current_user)):
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from io import BytesIO
+    counts = {"positive": 0, "negative": 0}
+    annotations = await db.annotations.find({"skipped": False}, {"_id": 0}).to_list(100000)
+    for a in annotations:
+        for t in a.get('tags', []):
+            v = t.get('valence') or 'positive'
+            if v in counts:
+                counts[v] += 1
+    labels = list(counts.keys()); sizes = [counts[k] for k in labels]
+    colors = ['#10b981', '#ef4444']
+    plt.figure(figsize=(4, 4))
+    plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140)
+    plt.axis('equal'); plt.title('Valence Distribution'); plt.tight_layout()
+    buf = BytesIO(); plt.savefig(buf, format='png'); buf.seek(0)
+    return StreamingResponse(buf, media_type='image/png')
+
 @api_router.get("/analytics/tag-prevalence-chart-public")
 async def get_tag_prevalence_chart_public(token: str = Query("")):
     # Validate token
