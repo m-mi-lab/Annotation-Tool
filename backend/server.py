@@ -97,7 +97,7 @@ class Annotation(BaseModel):
     tags: List[Dict[str, str]] = []
     notes: Optional[str] = None
     skipped: bool = False
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
 class AnnotationCreate(BaseModel):
     sentence_id: str
