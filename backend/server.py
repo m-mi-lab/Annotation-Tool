@@ -744,4 +744,216 @@ async def get_valence_chart_public(token: str = Query("")):
     buf = BytesIO(); plt.savefig(buf, format='png'); buf.seek(0)
     return StreamingResponse(buf, media_type='image/png')
 
-# Resources, Bulk ops, Messages, and System routes remain unchanged below...
+# Admin CSV Download
+@api_router.get("/admin/download/annotated-csv/{document_id}")
+async def download_annotated_csv(document_id: str, admin_user: User = Depends(get_admin_user)):
+    document = await db.documents.find_one({"id": document_id})
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    sentences = await db.sentences.find({"document_id": document_id}, {"_id": 0}).to_list(100000)
+    sentence_ids = [s["id"] for s in sentences]
+    annotations = await db.annotations.find({"sentence_id": {"$in": sentence_ids}}, {"_id": 0}).to_list(100000)
+    
+    def generate_csv():
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["sentence_id", "sentence_text", "subject_id", "user_id", "domain", "category", "tag", "valence", "notes", "skipped", "created_at"])
+        
+        sentences_by_id = {s["id"]: s for s in sentences}
+        
+        for annotation in annotations:
+            sentence = sentences_by_id.get(annotation["sentence_id"])
+            if not sentence:
+                continue
+                
+            if annotation.get("skipped"):
+                writer.writerow([
+                    annotation["sentence_id"],
+                    sentence["text"],
+                    sentence.get("subject_id", ""),
+                    annotation["user_id"],
+                    "",
+                    "",
+                    "",
+                    "",
+                    annotation.get("notes", ""),
+                    "True",
+                    annotation["created_at"]
+                ])
+            else:
+                for tag in annotation.get("tags", []):
+                    writer.writerow([
+                        annotation["sentence_id"],
+                        sentence["text"],
+                        sentence.get("subject_id", ""),
+                        annotation["user_id"],
+                        tag.get("domain", ""),
+                        tag.get("category", ""),
+                        tag.get("tag", ""),
+                        tag.get("valence", ""),
+                        annotation.get("notes", ""),
+                        "False",
+                        annotation["created_at"]
+                    ])
+        
+        output.seek(0)
+        return output.getvalue()
+    
+    csv_content = generate_csv()
+    return StreamingResponse(
+        io.StringIO(csv_content),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=annotated_{document['filename']}.csv"}
+    )
+
+# Document Annotations
+@api_router.get("/documents/{document_id}/annotations")
+async def get_document_annotations(document_id: str, current_user: User = Depends(get_current_user)):
+    sentences = await db.sentences.find({"document_id": document_id}, {"_id": 0, "id": 1}).to_list(100000)
+    sentence_ids = [s["id"] for s in sentences]
+    annotations = await db.annotations.find({"sentence_id": {"$in": sentence_ids}}, {"_id": 0}).to_list(100000)
+    return annotations
+
+# Bulk Operations
+@api_router.post("/admin/users/bulk-delete")
+async def bulk_delete_users(payload: BulkDeleteUsersRequest, admin_user: User = Depends(get_admin_user)):
+    results = {}
+    for user_id in payload.user_ids:
+        if user_id == admin_user.id:
+            results[user_id] = "cannot_delete_self"
+            continue
+        
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            results[user_id] = "not_found"
+            continue
+        
+        await db.annotations.delete_many({"user_id": user_id})
+        result = await db.users.delete_one({"id": user_id})
+        if result.deleted_count > 0:
+            results[user_id] = "deleted"
+        else:
+            results[user_id] = "error"
+    
+    return {"results": results}
+
+@api_router.post("/admin/documents/bulk-delete")
+async def bulk_delete_documents(payload: BulkDeleteDocumentsRequest, admin_user: User = Depends(get_admin_user)):
+    results = {}
+    for doc_id in payload.document_ids:
+        # Delete annotations first
+        sentences = await db.sentences.find({"document_id": doc_id}, {"id": 1}).to_list(100000)
+        sentence_ids = [s["id"] for s in sentences]
+        await db.annotations.delete_many({"sentence_id": {"$in": sentence_ids}})
+        
+        # Delete sentences
+        await db.sentences.delete_many({"document_id": doc_id})
+        
+        # Delete document
+        result = await db.documents.delete_one({"id": doc_id})
+        if result.deleted_count > 0:
+            results[doc_id] = "deleted"
+        else:
+            results[doc_id] = "not_found"
+    
+    return {"results": results}
+
+# Resources
+@api_router.get("/resources")
+async def get_resources(current_user: User = Depends(get_current_user)):
+    resources = await db.resources.find({}, {"_id": 0}).to_list(1000)
+    return resources
+
+@api_router.post("/admin/resources/upload")
+async def upload_resource(file: UploadFile = File(...), admin_user: User = Depends(get_admin_user)):
+    if not allowed_resource(file.filename):
+        raise HTTPException(status_code=400, detail="File type not allowed")
+    
+    content = await file.read()
+    resource = Resource(
+        filename=file.filename,
+        content_type=file.content_type,
+        size_bytes=len(content),
+        uploaded_by=admin_user.id
+    )
+    
+    # Store in GridFS
+    fs = get_gridfs_bucket()
+    file_id = await fs.upload_from_stream(
+        resource.filename,
+        io.BytesIO(content),
+        metadata={"resource_id": resource.id}
+    )
+    
+    resource_dict = resource.dict()
+    resource_dict["gridfs_id"] = str(file_id)
+    await db.resources.insert_one(resource_dict)
+    
+    return resource
+
+@api_router.get("/resources/{resource_id}/download")
+async def download_resource(resource_id: str, current_user: User = Depends(get_current_user)):
+    resource = await db.resources.find_one({"id": resource_id})
+    if not resource:
+        raise HTTPException(status_code=404, detail="Resource not found")
+    
+    fs = get_gridfs_bucket()
+    try:
+        grid_out = await fs.open_download_stream(ObjectId(resource["gridfs_id"]))
+        content = await grid_out.read()
+        
+        return StreamingResponse(
+            io.BytesIO(content),
+            media_type=resource.get("content_type", "application/octet-stream"),
+            headers={"Content-Disposition": f"attachment; filename={resource['filename']}"}
+        )
+    except Exception:
+        raise HTTPException(status_code=404, detail="Resource file not found")
+
+@api_router.delete("/admin/resources/{resource_id}")
+async def delete_resource(resource_id: str, admin_user: User = Depends(get_admin_user)):
+    resource = await db.resources.find_one({"id": resource_id})
+    if not resource:
+        raise HTTPException(status_code=404, detail="Resource not found")
+    
+    # Delete from GridFS
+    fs = get_gridfs_bucket()
+    try:
+        await fs.delete(ObjectId(resource["gridfs_id"]))
+    except Exception:
+        pass  # File might not exist in GridFS
+    
+    # Delete from database
+    await db.resources.delete_one({"id": resource_id})
+    return {"message": "Resource deleted successfully"}
+
+# Messages (placeholder for future use)
+@api_router.get("/messages")
+async def get_messages(current_user: User = Depends(get_current_user)):
+    return []
+
+@api_router.post("/messages")
+async def create_message(content: str, current_user: User = Depends(get_current_user)):
+    return {"message": "Messages not implemented"}
+
+# CORS Configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include the API router
+app.include_router(api_router)
+
+# Health check
+@app.get("/")
+async def root():
+    return {"message": "SDOH Annotation Tool API", "status": "running"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
