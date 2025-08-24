@@ -799,7 +799,7 @@ const Dashboard = () => {
             <Card>
               <CardHeader><CardTitle>Projects Overview</CardTitle></CardHeader>
               <CardContent>
-                <img src={`${API}/analytics/projects-chart`} alt="Projects Chart" className="w-full rounded border mb-4" />
+                {projectsChartUrl && (<img src={projectsChartUrl} alt="Projects Chart" className="w-full rounded border mb-4" />)}
                 <div className="overflow-auto">
                   <table className="w-full text-sm">
                     <thead>
