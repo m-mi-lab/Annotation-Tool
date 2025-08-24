@@ -115,66 +115,134 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "testing"
         comment: "Auth endpoints verified with JWT and role enforcement."
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Authentication system fully functional. Admin and user login working correctly with proper JWT token generation and validation."
   - task: "Documents upload/list/sentences"
     implemented: true
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "testing"
         comment: "Upload CSV (admin-only), parsed to sentences; listing and retrieval OK."
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Document management system working correctly. CSV upload with project metadata, sentence parsing, and document listing all functional."
   - task: "Annotations create/get/delete"
     implemented: true
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "testing"
         comment: "Create with tags/valence and skipped; fetch per sentence; delete with RBAC OK."
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Annotation system fully functional. Create, retrieve, and delete operations working with proper RBAC enforcement."
   - task: "Tag structure endpoint"
     implemented: true
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "testing"
         comment: "Static SDOH tag structure returned as designed."
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Tag structure endpoint working correctly, returning SDOH domain structure."
   - task: "Analytics overview"
     implemented: true
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "testing"
         comment: "Counts for docs/sentences/annotations/skipped/tagged/annotators OK."
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Analytics overview endpoint working correctly with comprehensive statistics."
   - task: "Admin CSV download (annotated)"
     implemented: true
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "testing"
         comment: "CSV stream verified; rows per annotation-tag (or single row for skipped)."
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Admin CSV download functionality working correctly with proper data export."
+  - task: "Projects Overview Analytics Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "New endpoint /api/analytics/projects implemented to return per-project analytics with required fields."
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - /api/analytics/projects endpoint working correctly. Returns array of projects with all required fields: project_name, documents_count, total_sentences, annotated_sentences, progress, annotators_count, last_activity. Authentication properly enforced (returns 403 for unauthorized access). Data integrity validated: progress calculations accurate, annotated_sentences never exceeds total_sentences."
+  - task: "Projects Chart Analytics Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "New endpoint /api/analytics/projects-chart implemented to return stacked bar chart as PNG image."
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - /api/analytics/projects-chart endpoint working correctly. Returns valid PNG image (26633 bytes) with proper content-type 'image/png'. Authentication properly enforced. Stacked chart logic validated: remaining = total - annotated, never negative. Chart reflects completed vs remaining sentences accurately."
+  - task: "Analytics Enhanced Regression"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - /api/analytics/enhanced endpoint still working correctly after new analytics implementation. Returns proper structure with per_user, sentences_left_overall, and irr_pairs fields."
+  - task: "Analytics Chart Endpoints Regression"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Both /api/analytics/tag-prevalence-chart and /api/analytics/valence-chart endpoints still working correctly. Return valid PNG images (13540 and 20132 bytes respectively) with proper content-type headers. No regression detected."
 
 frontend:
   - task: "Annotation save navigation fix (stay on current)"
