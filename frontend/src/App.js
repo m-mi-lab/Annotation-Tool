@@ -642,6 +642,14 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDocuments(); fetchAnalytics(); fetchEnhancedAnalytics(); fetchTagStructure(); fetchResources(); fetchProjects();
+    // construct projects chart URL with bearer token query to satisfy image request auth in preview env
+    const t = localStorage.getItem('token');
+    if (t) {
+      // Some environments allow sending token via query parameter for image GET
+      setProjectsChartUrl(`${API}/analytics/projects-chart?token=${encodeURIComponent(t)}`);
+    } else {
+      setProjectsChartUrl(`${API}/analytics/projects-chart`);
+    }
   }, []);
 
   const fetchDocuments = async () => {
