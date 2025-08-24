@@ -228,31 +228,41 @@ async def upload_document(
                         "text": sentence_text,
                         "subject_id": row.get('patient_id', row.get('note_id', 'unknown')),
                         "document_id": "",  # Will be set after document creation
-                        "created_at": datetime.utcnow()
+                        "created_at": datetime.utcnow().isoformat()
                     }
                     sentences.append(sentence)
     
     # Create document
+    document_id = str(uuid.uuid4())
     document = {
-        "id": str(uuid.uuid4()),
+        "id": document_id,
         "filename": file.filename,
         "project_name": project_name or "Default Project",
         "description": description,
         "total_sentences": len(sentences),
         "uploaded_by": current_user.id,
-        "created_at": datetime.utcnow()
+        "created_at": datetime.utcnow().isoformat()
     }
     
     # Set document_id for sentences
     for sentence in sentences:
-        sentence["document_id"] = document["id"]
+        sentence["document_id"] = document_id
     
     # Insert document and sentences
     await db.documents.insert_one(document)
     if sentences:
         await db.sentences.insert_many(sentences)
     
-    return document
+    # Return document without ObjectId
+    return {
+        "id": document["id"],
+        "filename": document["filename"],
+        "project_name": document["project_name"],
+        "description": document["description"],
+        "total_sentences": document["total_sentences"],
+        "uploaded_by": document["uploaded_by"],
+        "created_at": document["created_at"]
+    }
 
 @api_router.get("/documents/{document_id}/sentences")
 async def get_document_sentences(
