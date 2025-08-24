@@ -501,6 +501,159 @@ class SDOHAPITester:
         """Test tag prevalence analytics (updated endpoint)"""
         return self.run_test("Tag Prevalence Analytics", "GET", "analytics/tag-prevalence", 200)
 
+    def test_projects_analytics_endpoint(self):
+        """Test /api/analytics/projects endpoint - smoke check"""
+        success, response = self.run_test("Projects Analytics JSON", "GET", "analytics/projects", 200)
+        
+        if success and isinstance(response, list):
+            print(f"   Found {len(response)} projects")
+            if response:
+                project = response[0]
+                required_fields = ['project_name', 'documents_count', 'total_sentences', 
+                                 'annotated_sentences', 'progress', 'annotators_count', 'last_activity']
+                missing_fields = [field for field in required_fields if field not in project]
+                if missing_fields:
+                    print(f"   ❌ Missing fields: {missing_fields}")
+                    return False
+                else:
+                    print(f"   ✅ All required fields present: {required_fields}")
+                    print(f"   Sample project: {project['project_name']} - {project['progress']:.1%} complete")
+        
+        return success
+
+    def test_projects_chart_authentication(self):
+        """Test /api/analytics/projects-chart endpoint authentication scenarios"""
+        print("\n🔍 Testing Projects Chart Authentication Scenarios...")
+        
+        # Store original token
+        original_token = self.token
+        
+        # Test 1: Unauthenticated request should return 401
+        self.token = None
+        success_unauth, _ = self.run_test(
+            "Projects Chart - Unauthenticated (should be 401)",
+            "GET",
+            "analytics/projects-chart",
+            401
+        )
+        
+        # Test 2: Authenticated via Bearer token should return 200 with image/png
+        self.token = self.admin_token if self.admin_token else original_token
+        success_bearer, response_bearer = self.test_projects_chart_bearer()
+        
+        # Test 3: Authenticated via token query param should return 200 with image/png
+        success_query, response_query = self.test_projects_chart_query_param()
+        
+        # Test 4: Data integrity test - remaining should be non-negative
+        success_integrity = self.test_projects_chart_data_integrity()
+        
+        # Restore original token
+        self.token = original_token
+        
+        all_passed = success_unauth and success_bearer and success_query and success_integrity
+        if all_passed:
+            print("   ✅ All authentication scenarios passed")
+        else:
+            print("   ❌ Some authentication scenarios failed")
+        
+        return all_passed
+
+    def test_projects_chart_bearer(self):
+        """Test projects chart with Bearer token authentication"""
+        import requests
+        
+        url = f"{self.base_url}/analytics/projects-chart"
+        headers = {'Authorization': f'Bearer {self.admin_token}'}
+        
+        try:
+            response = requests.get(url, headers=headers)
+            success = response.status_code == 200
+            
+            if success:
+                content_type = response.headers.get('content-type', '')
+                content_length = len(response.content)
+                
+                if 'image/png' in content_type:
+                    print(f"   ✅ Bearer Auth - Status: 200, Content-Type: {content_type}, Size: {content_length} bytes")
+                    return True, response.content
+                else:
+                    print(f"   ❌ Bearer Auth - Wrong content type: {content_type}")
+                    return False, None
+            else:
+                print(f"   ❌ Bearer Auth - Status: {response.status_code}")
+                return False, None
+                
+        except Exception as e:
+            print(f"   ❌ Bearer Auth - Error: {str(e)}")
+            return False, None
+
+    def test_projects_chart_query_param(self):
+        """Test projects chart with token query parameter"""
+        import requests
+        
+        url = f"{self.base_url}/analytics/projects-chart?token={self.admin_token}"
+        
+        try:
+            response = requests.get(url)  # No Authorization header
+            success = response.status_code == 200
+            
+            if success:
+                content_type = response.headers.get('content-type', '')
+                content_length = len(response.content)
+                
+                if 'image/png' in content_type:
+                    print(f"   ✅ Query Param Auth - Status: 200, Content-Type: {content_type}, Size: {content_length} bytes")
+                    return True, response.content
+                else:
+                    print(f"   ❌ Query Param Auth - Wrong content type: {content_type}")
+                    return False, None
+            else:
+                print(f"   ❌ Query Param Auth - Status: {response.status_code}")
+                return False, None
+                
+        except Exception as e:
+            print(f"   ❌ Query Param Auth - Error: {str(e)}")
+            return False, None
+
+    def test_projects_chart_data_integrity(self):
+        """Test data integrity: remaining should be non-negative (total >= annotated)"""
+        # First get the projects data to check integrity
+        success, projects_data = self.run_test("Projects Data for Integrity Check", "GET", "analytics/projects", 200)
+        
+        if not success or not projects_data:
+            print("   ❌ Could not get projects data for integrity check")
+            return False
+        
+        integrity_issues = []
+        for project in projects_data:
+            total = project.get('total_sentences', 0)
+            annotated = project.get('annotated_sentences', 0)
+            remaining = total - annotated
+            
+            if remaining < 0:
+                integrity_issues.append({
+                    'project': project.get('project_name', 'Unknown'),
+                    'total': total,
+                    'annotated': annotated,
+                    'remaining': remaining
+                })
+        
+        if integrity_issues:
+            print(f"   ❌ Data integrity issues found in {len(integrity_issues)} projects:")
+            for issue in integrity_issues:
+                print(f"      - {issue['project']}: total={issue['total']}, annotated={issue['annotated']}, remaining={issue['remaining']}")
+            return False
+        else:
+            print(f"   ✅ Data integrity verified: all {len(projects_data)} projects have non-negative remaining sentences")
+            # Show sample data
+            if projects_data:
+                sample = projects_data[0]
+                total = sample.get('total_sentences', 0)
+                annotated = sample.get('annotated_sentences', 0)
+                remaining = total - annotated
+                print(f"      Sample: {sample.get('project_name')} - total:{total}, annotated:{annotated}, remaining:{remaining}")
+            return True
+
     def test_admin_delete_user_validation(self):
         """Test user deletion validation (cannot delete self)"""
         if not self.admin_user_id:
