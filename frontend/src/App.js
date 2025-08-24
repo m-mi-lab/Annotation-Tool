@@ -590,11 +590,21 @@ const Dashboard = () => {
 
   // Support deep links like /dashboard#documents, /dashboard#annotate, etc.
   useEffect(() => {
-    const hash = window.location.hash?.replace('#', '');
-    if (hash && ['manage','upload','documents','annotate','resources','analytics'].includes(hash)) {
-      setActiveTab(hash);
+    const raw = window.location.hash?.replace('#', '');
+    if (!raw) return;
+    const [tabPart, subjectPart] = raw.split('&');
+    if (tabPart && ['manage','upload','documents','annotate','resources','analytics'].includes(tabPart)) {
+      setActiveTab(tabPart);
     }
-  }, []);
+    if (subjectPart && subjectPart.startsWith('subject=')) {
+      const subId = subjectPart.split('=')[1];
+      // If a document is already selected, try to jump to that subject
+      if (selectedDocument && subId) {
+        const idx = sentences.findIndex(s => s.subject_id === subId);
+        if (idx >= 0) setCurrentSentenceIndex(idx);
+      }
+    }
+  }, [selectedDocument, sentences]);
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
