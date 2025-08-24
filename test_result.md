@@ -256,7 +256,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Document deletion UI buttons visibility issue"
+    - "Projects Overview analytics (stacked chart)"
+    - "Subject filter in Manage Annotations modal"
   stuck_tasks:
     - "User/Document deletion UI refresh - delete buttons not visible"
   test_all: false
