@@ -362,6 +362,35 @@ agent_communication:
   - agent: "main"
     message: |
       Implemented Projects Overview stacked chart endpoint (/api/analytics/projects-chart) and wired it in Admin -> Analytics. Added Subject filter to Manage Annotations modal (client-side unique subjects from doc annotations). Updated test plan focus and requested backend+frontend retesting.
+  - agent: "testing"
+    message: |
+      ✅ END-TO-END UI TESTING COMPLETED - Comprehensive testing of new frontend features completed successfully:
+      
+      AUTHENTICATION & ADMIN ACCESS:
+      - ✅ Admin user login successful with proper role-based access
+      - ✅ Admin tab visible and accessible
+      - ✅ Navigation between tabs (Admin, Documents, Annotate, Resources) functional
+      
+      PROJECTS OVERVIEW ANALYTICS UI:
+      - ✅ Projects Overview section found in Admin tab
+      - ✅ Projects table renders with all required columns: Project, Docs, Sentences, Annotated, Progress, Annotators, Last Activity
+      - ✅ Table contains 2 data rows with functional progress bars
+      - ❌ CRITICAL ISSUE: Stacked chart image from /api/analytics/projects-chart fails to load (403 authentication error, naturalWidth: 0)
+      
+      SUBJECT FILTER IN MANAGE ANNOTATIONS MODAL:
+      - ✅ Manage Annotations modal opens correctly from Documents tab
+      - ✅ Subject filter dropdown present with 'All' option
+      - ✅ All filter elements found: Annotator, Type, Subject, Text search
+      - ✅ Combined filtering functionality works
+      - ✅ Delete selected button available
+      - ⚠️ No unique subject_id values in current test data (only 'All' option)
+      
+      GENERAL CHECKS:
+      - ✅ REACT_APP_BACKEND_URL properly used for all API calls (23 API requests detected)
+      - ✅ No unexpected navigation redirects
+      - ❌ Console errors found: 403 errors for analytics chart endpoints, 404 for resources endpoint
+      
+      CRITICAL ISSUE IDENTIFIED: Chart authentication problem needs immediate attention.
 
   - agent: "testing"
     message: |
