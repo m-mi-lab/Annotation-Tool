@@ -574,8 +574,27 @@ async def get_projects_analytics(current_user: User = Depends(get_current_user))
     result.sort(key=lambda x: x['annotated_sentences'], reverse=True)
     return result
 
+async def get_current_user_optional(credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))):
+    """Optional authentication - returns None if no token provided"""
+    if not credentials:
+        return None
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            return None
+        user = await db.users.find_one({"id": user_id}, {"_id": 0})
+        if user is None:
+            return None
+        # Convert datetime to string if needed
+        if isinstance(user.get('created_at'), datetime):
+            user['created_at'] = user['created_at'].isoformat()
+        return User(**user)
+    except jwt.PyJWTError:
+        return None
+
 @api_router.get("/analytics/projects-chart")
-async def get_projects_chart(current_user: User = Depends(get_current_user), token: Optional[str] = None):
+async def get_projects_chart(current_user: Optional[User] = Depends(get_current_user_optional), token: Optional[str] = None):
     """
     Stacked bar chart (Option B): Completed vs Remaining sentences per project.
     Supports token query param for environments where <img> requests cannot send Authorization headers.
@@ -587,10 +606,18 @@ async def get_projects_chart(current_user: User = Depends(get_current_user), tok
             user_id = payload.get("sub")
             if user_id:
                 u = await db.users.find_one({"id": user_id}, {"_id": 0})
-                if not u:
+                if u:
+                    if isinstance(u.get('created_at'), datetime):
+                        u['created_at'] = u['created_at'].isoformat()
+                    current_user = User(**u)
+                else:
                     raise HTTPException(status_code=401, detail="Invalid token user")
         except Exception:
             raise HTTPException(status_code=401, detail="Invalid token")
+    
+    # Require authentication (either via header or query param)
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
 
     import matplotlib
     matplotlib.use('Agg')
