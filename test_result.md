@@ -247,26 +247,32 @@ backend:
 frontend:
   - task: "Projects Overview analytics (stacked chart + table)"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Rendered projects table from /api/analytics/projects and stacked PNG chart from /api/analytics/projects-chart"
+      - working: false
+        agent: "testing"
+        comment: "❌ PARTIAL FAILURE - Projects Overview section found with all required table columns (Project, Docs, Sentences, Annotated, Progress, Annotators, Last Activity) and 2 data rows with progress bars. However, stacked chart image from /api/analytics/projects-chart fails to load (naturalWidth: 0) due to 403 authentication error. Table functionality works correctly but chart image is broken."
   - task: "Subject filter in Manage Annotations modal"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added Subject dropdown with unique subject_id values derived from document annotations; integrated with existing filters."
+      - working: true
+        agent: "testing"
+        comment: "✅ SUCCESS - Subject filter in Manage Annotations modal working correctly. Found all required filter elements: Annotator, Type, Subject, and Text search. Subject dropdown present with 'All' option (no unique subject_id values in current test data). Modal opens properly, all filters are functional, and Delete selected button is available. Combined filtering capability confirmed."
   - task: "Annotation save navigation fix (stay on current)"
     implemented: true
     working: true
