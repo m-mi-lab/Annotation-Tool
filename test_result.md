@@ -266,7 +266,8 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: |
-      Implemented save/skip navigation fixes, per-sentence annotation refresh, UI for annotation deletion with RBAC check, and admin CSV download end-to-end. Backend fully tested via testing agent (all pass). Awaiting user confirmation to run frontend automated tests or for manual validation. Next priority (per user): fix Deletion UI after above features verified.
+      Implemented Projects Overview stacked chart endpoint (/api/analytics/projects-chart) and wired it in Admin -> Analytics. Added Subject filter to Manage Annotations modal (client-side unique subjects from doc annotations). Updated test plan focus and requested backend+frontend retesting.
+
   - agent: "testing"
     message: |
       ✅ COMPREHENSIVE FRONTEND UI TESTING COMPLETED - Fixed critical backend API router inclusion issue that was causing 404 errors. All major frontend functionality tested successfully:
