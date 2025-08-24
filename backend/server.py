@@ -68,7 +68,7 @@ class User(BaseModel):
     full_name: str
     role: str = UserRole.ANNOTATOR
     is_active: bool = True
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
 class UserCreate(BaseModel):
     email: EmailStr
