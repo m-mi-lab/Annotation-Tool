@@ -555,6 +555,15 @@ const Dashboard = () => {
       const res = await axios.get(`${API}/documents/${doc.id}/annotations`);
       setDocAnnotations(res.data || []);
       setSelectedAnnIds([]); setSelectAllAnns(false);
+      // Optionally load user names for admin
+      try {
+        if (user?.role === 'admin') {
+          const usersRes = await axios.get(`${API}/admin/users`);
+          const map = {};
+          (usersRes.data || []).forEach(u => { map[u.id] = u.full_name || u.email; });
+          setUserMap(map);
+        }
+      } catch (e) { /* ignore */ }
     } catch (err) {
       alert('Error loading annotations: ' + (err.response?.data?.detail || 'Please try again.'));
     }
