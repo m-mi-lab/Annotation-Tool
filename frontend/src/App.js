@@ -848,7 +848,10 @@ const Dashboard = () => {
             <Card>
               <CardHeader><CardTitle>Valence Distribution</CardTitle></CardHeader>
               <CardContent>
-                <img src={`${API}/analytics/valence-chart`} alt="Valence Distribution Chart" className="w-80 h-80" />
+                <div className="flex items-center gap-4">
+                  <img src={`${API}/analytics/valence-chart`} alt="Valence Distribution Chart" className="w-80 h-80" />
+                  <Button variant="outline" size="sm" onClick={() => window.open(`${API}/analytics/valence-counts-csv`, '_blank')}>Download Valence CSV</Button>
+                </div>
               </CardContent>
             </Card>
           </div>
