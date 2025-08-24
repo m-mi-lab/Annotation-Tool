@@ -361,10 +361,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Projects Overview analytics (stacked chart + table) - chart authentication issue"
+    - "Projects Overview analytics (stacked chart + table) - Admin tab not visible"
+    - "Subject filter in Manage Annotations modal - Admin buttons not visible"
   stuck_tasks:
+    - "Projects Overview analytics - Admin tab missing from UI"
+    - "Subject filter in Manage Annotations modal - Admin features not showing"
     - "User/Document deletion UI refresh - delete buttons not visible"
-    - "Projects Overview analytics - chart image 403 authentication error"
   test_all: false
   test_priority: "high_first"
 
@@ -493,6 +495,45 @@ agent_communication:
       - All required JSON fields present: project_name, documents_count, total_sentences, annotated_sentences, progress, annotators_count, last_activity
       
       ENDPOINT FULLY FUNCTIONAL: Ready for production use with both authentication methods.
+
+  - agent: "testing"
+    message: |
+      ❌ CRITICAL UI ISSUES IDENTIFIED - Comprehensive testing reveals major frontend problems preventing access to admin features:
+      
+      AUTHENTICATION STATUS:
+      - ✅ Admin user successfully authenticated (Admin User visible in header)
+      - ✅ Admin badge and privileges confirmed
+      - ✅ Navigation to dashboard working
+      - ✅ REACT_APP_BACKEND_URL properly configured
+      
+      CRITICAL ISSUE 1 - ADMIN TAB MISSING:
+      - ❌ Admin tab is NOT visible in the tab navigation despite admin privileges
+      - ✅ Tab container found with Documents, Annotate, Resources tabs
+      - ❌ Projects Overview section cannot be accessed due to missing Admin tab
+      - ❌ This prevents testing of chart naturalWidth and table headers
+      
+      CRITICAL ISSUE 2 - ADMIN FEATURES NOT VISIBLE:
+      - ✅ Documents tab accessible with 4 documents visible
+      - ❌ Manage Annotations buttons NOT visible in document cards
+      - ❌ CSV download buttons NOT visible for admin users
+      - ❌ Delete document buttons NOT visible
+      - ❌ This prevents testing of Subject filter in Manage Annotations modal
+      
+      ROOT CAUSE ANALYSIS:
+      - Backend endpoints are working correctly (confirmed in previous tests)
+      - Frontend authentication is working (admin user detected)
+      - Issue appears to be in frontend conditional rendering of admin UI elements
+      - Admin-specific components may not be properly checking user role or rendering
+      
+      IMPACT:
+      - Cannot test Projects Overview analytics (chart + table)
+      - Cannot test Manage Annotations modal Subject filter
+      - Admin functionality is completely inaccessible via UI
+      
+      RECOMMENDATION:
+      - Main agent needs to investigate frontend admin UI rendering logic
+      - Check user role conditions in App.js for admin tab and admin buttons
+      - Verify that user.role === 'admin' conditions are working properly
 
 
 backend:
