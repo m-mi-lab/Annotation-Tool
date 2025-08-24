@@ -893,11 +893,53 @@ const Dashboard = () => {
             <Label htmlFor="selectAllAnns">Select all</Label>
             <Button variant="destructive" size="sm" disabled={selectedAnnIds.length === 0} onClick={bulkDeleteDocAnnotations}>Delete selected</Button>
           </div>
-          <div className="max-h-[50vh] overflow-auto space-y-2">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-end gap-3">
+              <div>
+                <Label className="text-xs">Annotator</Label>
+                <Select value={filterAnnotator} onValueChange={setFilterAnnotator}>
+                  <SelectTrigger className="w-48"><SelectValue placeholder="All" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    {Object.entries(userMap).map(([id, name]) => (
+                      <SelectItem key={id} value={id}>{name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Type</Label>
+                <Select value={filterType} onValueChange={setFilterType}>
+                  <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="tagged">Tagged</SelectItem>
+                    <SelectItem value="skipped">Skipped</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 min-w-[200px]">
+                <Label className="text-xs">Text contains</Label>
+                <Input value={filterText} onChange={(e) => setFilterText(e.target.value)} placeholder="Search in sentence text or notes..." />
+              </div>
+            </div>
+          </div>
+
+          <div className="max-h-[50vh] overflow-auto space-y-2 mt-3">
             {docAnnotations.length === 0 ? (
               <p className="text-sm text-gray-600">No annotations found for this document.</p>
             ) : (
-              docAnnotations.map((a) => (
+              docAnnotations
+                .filter(a => filterAnnotator === 'all' || a.user_id === filterAnnotator)
+                .filter(a => filterType === 'all' || (filterType === 'skipped' ? a.skipped : !a.skipped))
+                .filter(a => {
+                  if (!filterText) return true;
+                  const t = filterText.toLowerCase();
+                  const sentence = (a.sentence_text || '').toLowerCase();
+                  const notes = (a.notes || '').toLowerCase();
+                  return sentence.includes(t) || notes.includes(t);
+                })
+                .map((a) => (
                 <div key={a.id} className="flex items-start justify-between p-3 border rounded-md">
                   <div className="flex-1 pr-2">
                     <div className="flex items-center gap-2 mb-1">
