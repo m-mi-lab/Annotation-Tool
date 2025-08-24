@@ -130,6 +130,11 @@ async def get_current_user(user_id: str = Depends(verify_token)):
     user = await db.users.find_one({"id": user_id}, {"_id": 0})
     if user is None:
         raise HTTPException(status_code=401, detail="User not found")
+    
+    # Convert datetime to string if needed
+    if isinstance(user.get('created_at'), datetime):
+        user['created_at'] = user['created_at'].isoformat()
+    
     return User(**user)
 
 async def get_admin_user(current_user: User = Depends(get_current_user)):
