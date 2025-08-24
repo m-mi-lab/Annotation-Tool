@@ -398,16 +398,24 @@ const Dashboard = () => {
     } finally { setLoading(false); }
   };
 
-  const loadDocumentSentences = async (documentId) => {
+  const loadDocumentSentences = async (documentId, options = {}) => {
     // If deep-linked via hash, ensure tab switches correctly
     if (window.location.hash === '#annotate') {
       setActiveTab('annotate');
     }
     try {
       const response = await axios.get(`${API}/documents/${documentId}/sentences`);
-      setSentences(response.data);
+      const items = response.data || [];
+      setSentences(items);
       setSelectedDocument(documentId);
-      setCurrentSentenceIndex(0);
+      let nextIndex = 0;
+      if (typeof options.targetIndex === 'number') {
+        nextIndex = Math.min(Math.max(0, options.targetIndex), Math.max(0, items.length - 1));
+      } else if (options.targetSubject) {
+        const idx = items.findIndex(s => s.subject_id === options.targetSubject);
+        nextIndex = idx >= 0 ? idx : 0;
+      }
+      setCurrentSentenceIndex(nextIndex);
       setActiveTab('annotate');
     } catch (error) {
       alert('Error loading sentences: ' + (error.response?.data?.detail || 'Please try again.'));
