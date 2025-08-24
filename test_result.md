@@ -245,6 +245,28 @@ backend:
         comment: "✅ PASSED - Both /api/analytics/tag-prevalence-chart and /api/analytics/valence-chart endpoints still working correctly. Return valid PNG images (13540 and 20132 bytes respectively) with proper content-type headers. No regression detected."
 
 frontend:
+  - task: "Projects Overview analytics (stacked chart + table)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Rendered projects table from /api/analytics/projects and stacked PNG chart from /api/analytics/projects-chart"
+  - task: "Subject filter in Manage Annotations modal"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added Subject dropdown with unique subject_id values derived from document annotations; integrated with existing filters."
   - task: "Annotation save navigation fix (stay on current)"
     implemented: true
     working: true
