@@ -868,6 +868,11 @@ class SDOHAPITester:
         self.test_analytics_overview()
         self.test_analytics_tag_prevalence()
         
+        # === FOCUSED PROJECTS ANALYTICS TESTS ===
+        print("\n" + "=" * 20 + " PROJECTS ANALYTICS TESTS " + "=" * 20)
+        self.test_projects_analytics_endpoint()
+        self.test_projects_chart_authentication()
+        
         # === CLEANUP ===
         print("\n" + "=" * 30 + " CLEANUP " + "=" * 30)
         self.test_admin_delete_created_users()
