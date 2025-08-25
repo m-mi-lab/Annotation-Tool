@@ -1013,7 +1013,8 @@ const Dashboard = () => {
               <div className="flex items-center gap-2 p-2 bg-gray-50 border rounded">
                 <Checkbox id="selectAllDocs" checked={selectAllDocs} onCheckedChange={() => { if (selectAllDocs) { setSelectedDocIds([]); setSelectAllDocs(false); } else { setSelectedDocIds(documents.map(d => d.id)); setSelectAllDocs(true); } }} />
                 <Label htmlFor="selectAllDocs">Select all</Label>
-                <Button variant="destructive" size="sm" onClick={async () => { if (!selectedDocIds.length) return; if (!window.confirm(`Delete ${selectedDocIds.length} documents?`)) return; try { await axios.post(`${API}/admin/documents/bulk-delete`, { document_ids: selectedDocIds }); setDocuments(prev => prev.filter(d => !selectedDocIds.includes(d.id))); setSelectedDocIds([]); setSelectAllDocs(false); fetchAnalytics(); } catch (e) { alert('Error bulk-deleting documents: ' + (e.response?.data?.detail || 'Please try again.')); } }} disabled={!selectedDocIds.length}>Delete selected</Button>
+                <Button variant="outline" size="sm" onClick={() => { setSelectedDocIds([]); setSelectAllDocs(false); }}>Deselect all</Button>
+                <Button variant="destructive" size="sm" onClick={async () => { if (!selectedDocIds.length) return; if (!window.confirm(`Delete ${selectedDocIds.length} documents?`)) return; try { await axios.post(`${API}/admin/documents/bulk-delete`, { ids: selectedDocIds }); setDocuments(prev => prev.filter(d => !selectedDocIds.includes(d.id))); setSelectedDocIds([]); setSelectAllDocs(false); fetchAnalytics(); } catch (e) { alert('Error bulk-deleting documents: ' + (e.response?.data?.detail || 'Please try again.')); } }} disabled={!selectedDocIds.length}>Delete selected</Button>
               </div>
             )}
           </div>
