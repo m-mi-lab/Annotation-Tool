@@ -92,6 +92,82 @@ const useAuth = () => {
   return ctx;
 };
 
+// Account Page
+const AccountPage = () => {
+  const { user } = useAuth();
+  const [fullName, setFullName] = useState(user?.full_name || "");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+  const navigate = useNavigate();
+
+  const saveProfile = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/auth/me/profile`, { full_name: fullName });
+      alert("Profile updated");
+    } catch (e) {
+      alert(e.response?.data?.detail || "Error updating profile");
+    } finally { setSaving(false); }
+  };
+
+  const changePassword = async () => {
+    if (newPassword !== confirmPassword) { alert("New passwords do not match"); return; }
+    setSaving(true);
+    try {
+      await axios.post(`${API}/auth/change-password`, { current_password: currentPassword, new_password: newPassword });
+      alert("Password changed");
+      setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+    } catch (e) {
+      alert(e.response?.data?.detail || "Error changing password");
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto p-6 space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>My Account</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Full Name</Label>
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button onClick={saveProfile} disabled={saving}>Save Profile</Button>
+            <Button variant="outline" onClick={() => navigate('/dashboard')}>Back</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Change Password</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="space-y-2">
+            <Label>Current Password</Label>
+            <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>New Password</Label>
+            <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Confirm New Password</Label>
+            <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+          </div>
+          <div>
+            <Button onClick={changePassword} disabled={saving}>Change Password</Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 // Header
 const Header = () => {
   const { user, logout } = useAuth();
