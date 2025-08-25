@@ -705,6 +705,7 @@ const Dashboard = () => {
   const fetchProjects = async () => { try { const res = await axios.get(`${API}/analytics/projects`); setProjects(res.data || []); } catch {} };
   const fetchTagStructure = async () => { try { const res = await axios.get(`${API}/tag-structure`); setTagStructure(res.data || {}); } catch {} };
   const fetchResources = async () => { try { const res = await axios.get(`${API}/resources`); setResources(res.data || []); } catch {} };
+  const addResourceLink = async (title, url) => { try { await axios.post(`${API}/admin/resources/link`, { title, url }); await fetchResources(); } catch (e) { alert('Error adding link: ' + (e.response?.data?.detail || 'Please try again.')); } };
 
   const annotateDoc = async (documentId, options = {}) => {
     try {
