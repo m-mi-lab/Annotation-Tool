@@ -270,11 +270,11 @@ frontend:
         comment: "✅ SUCCESS - Projects Overview analytics fully functional. Admin tab visible and accessible. Projects table renders with all required columns (Project, Docs, Sentences, Annotated, Progress, Annotators, Last Activity). Projects chart loads properly with naturalWidth > 0. Both table and chart display correctly in Admin → Analytics section. All authentication and RBAC issues resolved."
   - task: "Subject filter in Manage Annotations modal"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -285,6 +285,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ CRITICAL FAILURE - Manage Annotations buttons are not visible in the Documents tab despite having 4 documents and admin user privileges. The admin-specific features (Manage Annotations, CSV download, Delete buttons) are not showing up in the document cards. This prevents testing of the Subject filter functionality as the modal cannot be opened."
+      - working: true
+        agent: "testing"
+        comment: "✅ SUCCESS - Subject filter in Manage Annotations modal fully functional. Admin features (Manage Annotations buttons) now properly visible in Documents tab. Modal opens correctly with all filter elements: Annotator, Type, Subject, and Text search. Subject dropdown present and functional. Combined filtering capability working. Delete selected functionality available."
   - task: "Annotation save navigation fix (stay on current)"
     implemented: true
     working: true
