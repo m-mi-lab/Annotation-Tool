@@ -527,11 +527,17 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
 
           {selectedTags.length > 0 && (
             <div className="space-y-2">
-              <h4 className="font-medium text-gray-900">Selected Tags:</h4>
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-gray-900">Selected Tags</h4>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setSelectedTags([])}>Clear all (C)</Button>
+                  <span className="text-xs text-gray-500">Shortcuts: 1-9 add/remove quick tags • Enter save • S skip • [/] prev/next • P/N valence</span>
+                </div>
+              </div>
               <div className="space-y-2">
                 {selectedTags.map((tag, index) => (
-                  <div key={index} className="flex items-center space-x-2 p-2 bg-green-50 rounded">
-                    <Badge variant="outline">{tag.domain}: {tag.category} - {tag.tag}</Badge>
+                  <div key={index} className={`flex items-center space-x-2 p-2 rounded border ${tag.valence === 'positive' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded ${tag.valence === 'positive' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{tag.domain}: {tag.category} - {tag.tag}</span>
                     <Select value={tag.valence} onValueChange={(value) => updateTagValence(index, value)}>
                       <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
                       <SelectContent>
