@@ -364,7 +364,7 @@ async def download_annotated_csv_inline(document_id: str, current_user: User = D
     sentences = await db.sentences.find({"document_id": document_id}, {"_id": 0}).to_list(10000)
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["sentence_id", "sentence_text", "user_id", "tags", "notes", "skipped"]) 
+    writer.writerow(["sentence_id", "sentence_text", "user_id", "tags", "notes", "skipped"])
     for sentence in sentences:
         annotations = await db.annotations.find({"sentence_id": sentence["id"]}, {"_id": 0}).to_list(1000)
         if annotations:
