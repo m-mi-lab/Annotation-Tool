@@ -703,7 +703,13 @@ const Dashboard = () => {
   const fetchAnalytics = async () => { try { const res = await axios.get(`${API}/analytics/overview`); setAnalytics(res.data); } catch {} };
   const fetchEnhancedAnalytics = async () => { try { const res = await axios.get(`${API}/analytics/enhanced`); setEnhancedAnalytics(res.data || { per_user: [], sentences_left_overall: 0, irr_pairs: [] }); } catch {} };
   const fetchProjects = async () => { try { const res = await axios.get(`${API}/analytics/projects`); setProjects(res.data || []); } catch {} };
-  const fetchTagStructure = async () => { try { const res = await axios.get(`${API}/tag-structure`); setTagStructure(res.data || {}); } catch {} };
+  const fetchTagStructure = async () => {
+    try {
+      const res = await axios.get(`${API}/tag-structure`);
+      const data = (res.data && res.data.tag_structure) ? res.data.tag_structure : res.data;
+      setTagStructure(data || {});
+    } catch {}
+  };
   const [resourcesPage, setResourcesPage] = useState(1);
   const [resourcesTotal, setResourcesTotal] = useState(0);
   const [resourcesQuery, setResourcesQuery] = useState("");
