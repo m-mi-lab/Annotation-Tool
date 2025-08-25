@@ -583,6 +583,32 @@ async def download_annotated_csv_split(document_id: str, current_user: User = De
 # ========================
 # Analytics (partial)
 # ========================
+@api_router.get("/admin/analytics/users")
+async def get_user_analytics(current_user: User = Depends(get_admin_user)):
+    """Get per-user analytics (admin only)"""
+    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(1000)
+    analytics = {}
+    
+    for user in users:
+        user_annotations = await db.annotations.find({"user_id": user["id"]}, {"_id": 0}).to_list(10000)
+        total_annotations = len(user_annotations)
+        tagged_annotations = len([a for a in user_annotations if not a.get("skipped", False)])
+        skipped_annotations = len([a for a in user_annotations if a.get("skipped", False)])
+        
+        analytics[user["id"]] = {
+            "user": {
+                "id": user["id"],
+                "email": user["email"],
+                "full_name": user.get("full_name", ""),
+                "role": user.get("role", "annotator")
+            },
+            "total_annotations": total_annotations,
+            "tagged_annotations": tagged_annotations,
+            "skipped_annotations": skipped_annotations
+        }
+    
+    return analytics
+
 @api_router.get("/analytics/overview")
 async def analytics_overview(current_user: User = Depends(get_current_user)):
     total_documents = await db.documents.count_documents({})
