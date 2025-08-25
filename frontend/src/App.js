@@ -813,18 +813,23 @@ const Dashboard = () => {
 
   // Deep link handler
   useEffect(() => {
-    const raw = window.location.hash?.replace('#', '');
-    if (!raw) return;
-    const [tabPart, subjectPart] = raw.split('&');
-    const allowed = ['admin','documents','annotate','resources'];
-    if (tabPart && allowed.includes(tabPart)) setActiveTab(tabPart);
-    if (subjectPart && subjectPart.startsWith('subject=')) {
-      const subId = subjectPart.split('=')[1];
-      if (selectedDocument) {
-        const idx = sentences.findIndex(s => s.subject_id === subId);
-        if (idx >= 0) setCurrentSentenceIndex(idx);
+    const handler = () => {
+      const raw = window.location.hash?.replace('#', '');
+      if (!raw) return;
+      const [tabPart, subjectPart] = raw.split('&');
+      const allowed = ['admin','documents','annotate','resources'];
+      if (tabPart && allowed.includes(tabPart)) setActiveTab(tabPart);
+      if (subjectPart && subjectPart.startsWith('subject=')) {
+        const subId = subjectPart.split('=')[1];
+        if (selectedDocument) {
+          const idx = sentences.findIndex(s => s.subject_id === subId);
+          if (idx >= 0) setCurrentSentenceIndex(idx);
+        }
       }
-    }
+    };
+    window.addEventListener('hashchange', handler);
+    handler(); // run once on mount
+    return () => window.removeEventListener('hashchange', handler);
   }, [selectedDocument, sentences.length]);
 
   return (
