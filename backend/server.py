@@ -789,4 +789,38 @@ async def get_projects_chart(current_user: Optional[User] = Depends(get_current_
     return StreamingResponse(buf, media_type='image/png')
 
 # Include API router with /api prefix for all endpoints
+
+# Optional: External resource links (Google Docs/Slides/Sheets)
+class ExternalResource(BaseModel):
+    title: str
+    url: str
+
+@api_router.post("/admin/resources/link")
+async def add_resource_link(payload: ExternalResource, current_user: User = Depends(get_admin_user)):
+    try:
+        u = urlparse(payload.url)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid URL")
+    if not u.scheme.startswith('http'):
+        raise HTTPException(status_code=400, detail="Invalid URL scheme")
+    rid = str(uuid.uuid4())
+    await db.resources_meta.insert_one({
+        'id': rid,
+        'filename': payload.title,
+        'content_type': 'text/uri-list',
+        'uploaded_by': current_user.id,
+        'uploaded_at': datetime.utcnow().isoformat(),
+        'size': 0,
+        'link_url': payload.url,
+        'kind': 'link'
+    })
+    return {'id': rid}
+
+@api_router.get("/resources/{resource_id}")
+async def get_resource_meta(resource_id: str, current_user: User = Depends(get_current_user)):
+    meta = await db.resources_meta.find_one({"id": resource_id}, {"_id": 0})
+    if not meta:
+        raise HTTPException(status_code=404, detail="Not found")
+    return meta
+
 app.include_router(api_router)
