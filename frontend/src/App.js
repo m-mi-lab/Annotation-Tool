@@ -707,8 +707,8 @@ const AdminManagementPanel = () => {
     const cleaned = selectedUserIds.filter(id => id !== currentUser?.id);
     const skipped = selectedUserIds.length - cleaned.length;
     if (!window.confirm(`Delete ${cleaned.length} users?${skipped > 0 ? ` (Skipped ${skipped} self)` : ''}`)) return;
-    try { await axios.post(`${API}/admin/users/bulk-delete`, { user_ids: cleaned }); setUsers(prev => prev.filter(u => !cleaned.includes(u.id))); setSelectedUserIds([]); setSelectAllUsers(false); }
-    catch (e) { alert("Error bulk-deleting users: " + (e.response?.data?.detail || "Please try again.")); }
+    try { await axios.post(`${API}/admin/users/bulk-delete`, { ids: cleaned }); setUsers(prev => prev.filter(u => !cleaned.includes(u.id))); setSelectedUserIds([]); setSelectAllUsers(false); }
+    catch (e) { const msg = e.response?.data?.detail || e.message || JSON.stringify(e.response?.data || {}); alert("Error bulk-deleting users: " + msg); }
   };
 
   return (
