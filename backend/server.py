@@ -409,18 +409,34 @@ async def get_enhanced_analytics(current_user: User = Depends(get_current_user))
     }
 
 @api_router.get("/analytics/tag-prevalence-chart")
-async def get_tag_prevalence_chart(current_user: User = Depends(get_current_user)):
+async def get_tag_prevalence_chart(current_user: Optional[User] = Depends(get_current_user_optional), token: Optional[str] = None):
+    # Allow ?token for image rendering in <img> tags
+    if token and not current_user:
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id = payload.get("sub")
+            if user_id:
+                u = await db.users.find_one({"id": user_id}, {"_id": 0})
+                if u:
+                    current_user = User(**u)
+                else:
+                    raise HTTPException(status_code=401, detail="Invalid token user")
+        except Exception:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     from io import BytesIO
-    
-    # Simple chart
+
+    # Placeholder simple chart (replace with real counts if needed)
     plt.figure(figsize=(10, 6))
-    plt.bar(['Economic', 'Social', 'Health'], [10, 15, 8])
+    plt.bar(['Economic', 'Social', 'Health'], [10, 15, 8], color=['#2563eb','#9333ea','#059669'])
     plt.title('Tag Prevalence')
     plt.ylabel('Count')
-    
+
     buf = BytesIO()
     plt.savefig(buf, format='png')
     buf.seek(0)
