@@ -250,11 +250,11 @@ backend:
 frontend:
   - task: "Projects Overview analytics (stacked chart + table)"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 2
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -265,6 +265,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ CRITICAL FAILURE - Admin tab is not visible in the UI despite user having admin privileges (Admin User badge visible in header). Projects Overview section cannot be accessed because Admin tab is missing from the tab navigation. This is a major UI issue preventing access to admin analytics features. The tab structure shows Documents, Annotate, Resources but no Admin tab."
+      - working: true
+        agent: "testing"
+        comment: "✅ SUCCESS - Projects Overview analytics fully functional. Admin tab visible and accessible. Projects table renders with all required columns (Project, Docs, Sentences, Annotated, Progress, Annotators, Last Activity). Projects chart loads properly with naturalWidth > 0. Both table and chart display correctly in Admin → Analytics section. All authentication and RBAC issues resolved."
   - task: "Subject filter in Manage Annotations modal"
     implemented: true
     working: false
