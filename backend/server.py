@@ -392,15 +392,38 @@ async def get_document_sentences(
 # ========================
 @api_router.post("/annotations", response_model=Annotation)
 async def create_annotation(annotation_data: AnnotationCreate, current_user: User = Depends(get_current_user)):
-    annotation = Annotation(
-        sentence_id=annotation_data.sentence_id,
-        user_id=current_user.id,
-        tags=annotation_data.tags,
-        notes=annotation_data.notes,
-        skipped=annotation_data.skipped
-    )
-    await db.annotations.insert_one(annotation.dict())
-    return annotation
+    # Enforce per-user, per-sentence exclusivity: either 'skip' or 'tags', not both
+    if annotation_data.skipped:
+        # Remove any existing annotations (tagged or skipped) for this user on this sentence
+        await db.annotations.delete_many({
+            "sentence_id": annotation_data.sentence_id,
+            "user_id": current_user.id
+        })
+        annotation = Annotation(
+            sentence_id=annotation_data.sentence_id,
+            user_id=current_user.id,
+            tags=[],
+            notes=annotation_data.notes,
+            skipped=True
+        )
+        await db.annotations.insert_one(annotation.dict())
+        return annotation
+    else:
+        # Remove any existing 'skip' annotation by this user for the sentence, keep other tagged annotations if desired
+        await db.annotations.delete_many({
+            "sentence_id": annotation_data.sentence_id,
+            "user_id": current_user.id,
+            "skipped": True
+        })
+        annotation = Annotation(
+            sentence_id=annotation_data.sentence_id,
+            user_id=current_user.id,
+            tags=annotation_data.tags,
+            notes=annotation_data.notes,
+            skipped=False
+        )
+        await db.annotations.insert_one(annotation.dict())
+        return annotation
 
 @api_router.get("/annotations/sentence/{sentence_id}")
 async def get_sentence_annotations(sentence_id: str, current_user: User = Depends(get_current_user)):
