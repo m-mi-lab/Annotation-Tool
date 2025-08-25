@@ -414,6 +414,21 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
 
   const removeTag = (index) => { const n = [...selectedTags]; n.splice(index, 1); setSelectedTags(n); };
   const updateTagValence = (index, valence) => { const n = [...selectedTags]; n[index].valence = valence; setSelectedTags(n); };
+  const selectTagWithValence = (domain, category, tag, valence) => {
+    setSelectedTags(prev => {
+      const idx = prev.findIndex(t => t.domain === domain && t.category === category && t.tag === tag);
+      if (idx >= 0) {
+        // if same valence clicked again, remove; otherwise update valence
+        if (prev[idx].valence === valence) {
+          const cp = [...prev]; cp.splice(idx, 1); return cp;
+        } else {
+          const cp = [...prev]; cp[idx] = { ...cp[idx], valence }; return cp;
+        }
+      } else {
+        return [...prev, { domain, category, tag, valence }];
+      }
+    });
+  };
 
   const handleSaveAnnotation = async () => {
     if (selectedTags.length === 0) return;
