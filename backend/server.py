@@ -207,7 +207,10 @@ def verify_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
 async def get_default_project_name() -> str:
-    """Get the default project name from settings or environment"""
+    """Get the default project name from settings (db.settings) or environment"""
+    s = await db.settings.find_one({"key": "default_project_name"}, {"_id": 0})
+    if s and s.get('value'):
+        return s['value']
     return os.environ.get('DEFAULT_PROJECT_NAME', 'Default Project')
 
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
