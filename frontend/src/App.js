@@ -1081,7 +1081,8 @@ const Dashboard = () => {
                     <Button variant="outline" size="sm" disabled={resourcesPage>=Math.ceil(resourcesTotal/20)} onClick={() => fetchResources(resourcesPage+1)}>Next</Button>
                   </div>
                 </div>
-              )}
+              </>)
+              }
             </CardContent>
           </Card>
         </TabsContent>
