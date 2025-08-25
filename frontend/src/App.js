@@ -1057,9 +1057,9 @@ const Dashboard = () => {
                   <Label htmlFor="selectAllDocs">Select all</Label>
                   <Button variant="outline" size="sm" onClick={() => { setSelectedDocIds([]); setSelectAllDocs(false); }}>Deselect all</Button>
                 </div>
-                <div className="flex items-center gap-2">
-                  <input type="file" accept=".csv" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const form = new FormData(); form.append('file', f); try { await axios.post(`${API}/documents/upload`, form, { headers: { 'Content-Type': 'multipart/form-data' } }); fetchDocuments(); fetchAnalytics(); } catch (err) { alert('Error uploading CSV: ' + (err.response?.data?.detail || err.message || 'Please try again.')); } finally { e.target.value = ''; } }} />
-                  <Button variant="secondary" size="sm" onClick={() => document.getElementById('csvUploadInput')?.click()}>Upload CSV</Button>
+                <div className="flex items-center gap-2 pl-4 ml-4 border-l">
+                  <input id="csvUploadInput" type="file" accept=".csv" onChange={(e) => { const f = e.target.files?.[0]; setUploadFile(f || null); }} />
+                  <Button variant="secondary" size="sm" disabled={!uploadFile} onClick={async () => { if (!uploadFile) return; const form = new FormData(); form.append('file', uploadFile); try { await axios.post(`${API}/documents/upload`, form, { headers: { 'Content-Type': 'multipart/form-data' } }); setUploadFile(null); fetchDocuments(); fetchAnalytics(); } catch (err) { alert('Error uploading CSV: ' + (err.response?.data?.detail || err.message || 'Please try again.')); } finally { const el = document.getElementById('csvUploadInput'); if (el) el.value = ''; } }}>Upload CSV</Button>
                 </div>
                 <Button variant="destructive" size="sm" onClick={async () => { if (!selectedDocIds.length) return; if (!window.confirm(`Delete ${selectedDocIds.length} documents?`)) return; try { await axios.post(`${API}/admin/documents/bulk-delete`, { ids: selectedDocIds }); setDocuments(prev => prev.filter(d => !selectedDocIds.includes(d.id))); setSelectedDocIds([]); setSelectAllDocs(false); fetchAnalytics(); } catch (e) { alert('Error bulk-deleting documents: ' + (e.response?.data?.detail || 'Please try again.')); } }} disabled={!selectedDocIds.length}>Delete selected</Button>
               </div>
