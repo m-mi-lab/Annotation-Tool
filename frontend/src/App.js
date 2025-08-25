@@ -416,6 +416,14 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
     setSelectedTags([]); setNotes("");
   };
 
+  const saveAndMove = async (dir) => {
+    if (selectedTags.length === 0) return;
+    await onAnnotate(currentSentence.id, selectedTags, notes);
+    setSelectedTags([]); setNotes("");
+    if (dir === 'prev' && currentIndex > 0) onIndexChange(currentIndex - 1);
+    if (dir === 'next' && currentIndex < sentences.length - 1) onIndexChange(currentIndex + 1);
+  };
+
   const handleSkip = async () => {
     await onAnnotate(currentSentence.id, [], notes, true);
     setSelectedTags([]); setNotes("");
