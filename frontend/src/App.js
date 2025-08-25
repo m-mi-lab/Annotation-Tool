@@ -465,9 +465,9 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                           </div>
                           <div className="flex flex-wrap gap-1 mb-2">
                             {(annotation.tags || []).map((tag, tagIdx) => (
-                              <Badge key={tagIdx} variant={tag.valence === 'positive' ? 'default' : 'destructive'} className="text-xs">
+                              <span key={tagIdx} className={`text-xs px-2 py-0.5 rounded border ${tag.valence === 'positive' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-red-100 text-red-800 border-red-300'}`}>
                                 {tag.domain}: {tag.tag} ({tag.valence})
-                              </Badge>
+                              </span>
                             ))}
                           </div>
                           {annotation.notes && (<p className="text-sm text-gray-600">Notes: {annotation.notes}</p>)}
