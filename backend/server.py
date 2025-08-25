@@ -33,6 +33,9 @@ SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your-secret-key-change-this-in-pr
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
+# Allowed file extensions for resource uploads
+ALLOWED_RESOURCE_EXT = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'png', 'jpg', 'jpeg', 'gif', 'svg'}
+
 # Create the main app without a prefix
 app = FastAPI(title="Social Determinants of Health Annotation Tool")
 
