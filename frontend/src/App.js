@@ -352,10 +352,14 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
 
   if (!currentSentence) return null;
 
-  const addTag = (domain, category, tag) => {
-    const newTag = { domain, category, tag, valence: "positive" };
+  const toggleTag = (domain, category, tag) => {
     const exists = selectedTags.some(t => t.domain === domain && t.category === category && t.tag === tag);
-    if (!exists) setSelectedTags([...selectedTags, newTag]);
+    if (exists) {
+      setSelectedTags(prev => prev.filter(t => !(t.domain === domain && t.category === category && t.tag === tag)));
+    } else {
+      const newTag = { domain, category, tag, valence: "positive" };
+      setSelectedTags(prev => [...prev, newTag]);
+    }
   };
 
   const removeTag = (index) => { const n = [...selectedTags]; n.splice(index, 1); setSelectedTags(n); };
