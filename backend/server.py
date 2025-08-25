@@ -454,7 +454,7 @@ async def delete_document(
     
     return {"message": "Document deleted"}
 
-@api_router.get("/admin/download/annotated-csv/{document_id}")
+@api_router.get("/admin/download/annotated-csv-inline/{document_id}")
 async def download_annotated_csv(
     document_id: str,
     current_user: User = Depends(get_admin_user)
