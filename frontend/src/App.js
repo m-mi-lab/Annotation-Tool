@@ -720,6 +720,8 @@ const AdminManagementPanel = () => {
     if (!window.confirm(`Delete ${cleaned.length} users?${skipped > 0 ? ` (Skipped ${skipped} self)` : ''}`)) return;
     try { await axios.post(`${API}/admin/users/bulk-delete`, { ids: cleaned }); setUsers(prev => prev.filter(u => !cleaned.includes(u.id))); setSelectedUserIds([]); setSelectAllUsers(false); }
     catch (e) { const msg = e.response?.data?.detail || e.message || JSON.stringify(e.response?.data || {}); alert("Error bulk-deleting users: " + msg); }
+  };
+
   const saveDefaultProject = async () => {
     const name = prompt('Set default project name', defaultProject) || defaultProject;
     try { const res = await axios.put(`${API}/admin/settings/default-project`, null, { params: { name } }); setDefaultProject(res.data?.value || name); alert('Default project updated'); fetchDocuments(); }
