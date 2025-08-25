@@ -393,7 +393,7 @@ async def upload_document(
     document = {
         'id': document_id,
         'filename': file.filename,
-        'project_name': 'Default Project',  # keep single project
+        'project_name': await get_default_project_name(),  # use default project from settings
         'description': description,
         'total_sentences': len(sentences),
         'uploaded_by': current_user.id,
