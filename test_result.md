@@ -837,6 +837,36 @@ backend:
         agent: "testing"
         comment: "✅ PASSED - /api/auth/change-password working correctly. Updates password hash in database. Properly validates current password and blocks requests with invalid current password (returns 400 status)."
 
+  - task: "Admin Role-Based User Management Endpoints"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "New admin endpoints implementation requested in review - GET /api/admin/users, POST /api/admin/users, PUT /api/admin/users/{user_id}, DELETE /api/admin/users/{user_id}, POST /api/admin/users/bulk-delete"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - All admin user management endpoints implemented and tested successfully. GET /api/admin/users returns users without passwords with proper role field. POST /api/admin/users creates users with annotator/admin roles. PUT /api/admin/users/{user_id} updates is_active and role fields. DELETE /api/admin/users/{user_id} deletes users with self-delete prevention. POST /api/admin/users/bulk-delete deletes multiple users while skipping current admin. All endpoints properly protected with admin role requirement (403 for non-admin users)."
+
+  - task: "Admin Role-Based Document Management Endpoints"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "New admin document bulk delete endpoint requested in review - POST /api/admin/documents/bulk-delete"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Admin document bulk delete endpoint implemented and tested successfully. POST /api/admin/documents/bulk-delete deletes multiple documents and properly cascades deletion to sentences and annotations. Endpoint properly protected with admin role requirement. Returns detailed deletion statistics including documents, sentences, and annotations deleted."
+
   - task: "Profile Update Functionality"
     implemented: true
     working: true
