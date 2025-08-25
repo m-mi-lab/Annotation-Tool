@@ -589,10 +589,14 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Additional context or observations..." rows={3} />
           </div>
 
-          <div className="flex space-x-2">
-            <Button onClick={handleSaveAnnotation} disabled={selectedTags.length === 0} className="bg-green-600 hover:bg-green-700">
-              <CheckCircle className="h-4 w-4 mr-2" /> Save Annotation
-            </Button>
+          <div className="flex flex-wrap gap-2 items-center">
+            <div className="inline-flex rounded-md shadow-sm" role="group">
+              <Button onClick={handleSaveAnnotation} disabled={selectedTags.length === 0} className="bg-green-600 hover:bg-green-700 rounded-r-none">
+                <CheckCircle className="h-4 w-4 mr-2" /> Save
+              </Button>
+              <Button onClick={() => saveAndMove('prev')} disabled={selectedTags.length === 0 || currentIndex === 0} className="rounded-none border-l-0">Save + Prev</Button>
+              <Button onClick={() => saveAndMove('next')} disabled={selectedTags.length === 0 || currentIndex === sentences.length - 1} className="rounded-l-none border-l-0">Save + Next</Button>
+            </div>
             <Button onClick={handleSkip} variant="outline" className="border-orange-300 text-orange-700 hover:bg-orange-50">
               <SkipForward className="h-4 w-4 mr-2" /> Skip - No SDOH Content
             </Button>
