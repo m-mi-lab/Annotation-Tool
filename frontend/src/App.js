@@ -341,6 +341,11 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
   const [notes, setNotes] = useState("");
   const [selectedAnnIds, setSelectedAnnIds] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [toast, setToast] = useState(null);
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 1500);
+  };
 
   // Quick shortcuts: flatten first 9 tags for 1-9 keyboard mapping
   const quickTags = React.useMemo(() => {
