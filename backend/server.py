@@ -936,6 +936,34 @@ async def get_projects_chart(current_user: Optional[User] = Depends(get_current_
 
 # Include API router with /api prefix for all endpoints
 
+@api_router.post("/admin/resources/upload")
+async def upload_resource(file: UploadFile = File(...), current_user: User = Depends(get_admin_user)):
+    if not file or not getattr(file, 'filename', None):
+        raise HTTPException(status_code=400, detail="No file provided")
+    ext = (file.filename.split('.')[-1] or '').lower()
+    if ext not in ALLOWED_RESOURCE_EXT:
+        raise HTTPException(status_code=400, detail=f"Unsupported file type: .{ext}")
+    data = await file.read()
+    grid_in = await fs_bucket.open_upload_stream(file.filename, metadata={
+        'uploaded_by': current_user.id,
+        'content_type': file.content_type or 'application/octet-stream',
+        'size': len(data),
+        'kind': 'file'
+    })
+    await grid_in.write(data)
+    await grid_in.close()
+    rid = str(grid_in._id)
+    await db.resources_meta.insert_one({
+        'id': rid,
+        'filename': file.filename,
+        'content_type': file.content_type or 'application/octet-stream',
+        'uploaded_by': current_user.id,
+        'uploaded_at': datetime.utcnow().isoformat(),
+        'size': len(data),
+        'kind': 'file'
+    })
+    return {'id': rid}
+
 # Optional: External resource links (Google Docs/Slides/Sheets)
 class ExternalResource(BaseModel):
     title: str
