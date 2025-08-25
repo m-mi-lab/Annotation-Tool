@@ -510,6 +510,13 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
               <div className="space-y-2">
                 {currentSentence.annotations.map((annotation) => {
                   const canDelete = user?.role === 'admin' || annotation.user_id === user?.id;
+                  const deleteOneTag = async (annId, t) => {
+                    try {
+                      const res = await axios.post(`${API}/annotations/${annId}/remove-tag`, { domain: t.domain, category: t.category, tag: t.tag });
+                      if (res?.data?.id) await refreshSentenceAnnotations(annotation.sentence_id);
+                      else await refreshSentenceAnnotations(annotation.sentence_id);
+                    } catch (e) { alert('Error removing tag: ' + (e.response?.data?.detail || 'Please try again.')); }
+                  };
                   return (
                     <div key={annotation.id} className="p-3 bg-blue-50 rounded-md">
                       {annotation.skipped ? (
