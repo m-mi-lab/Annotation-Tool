@@ -173,6 +173,11 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 async def root():
     return {"status": "ok"}
 
+@api_router.get("/domains")
+async def get_domains():
+    """Get SDOH domains"""
+    return SDOH_DOMAINS
+
 @api_router.get("/tag-structure")
 async def get_tag_structure():
     return SDOH_TAG_STRUCTURE
