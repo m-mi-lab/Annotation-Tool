@@ -1101,6 +1101,7 @@ const AuthenticatedApp = () => {
         <Routes>
           <Route path="/home" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/account" element={<AccountPage />} />
           <Route path="/" element={<Navigate to="/home" />} />
           <Route path="*" element={<Navigate to="/home" />} />
         </Routes>
