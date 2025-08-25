@@ -17,6 +17,7 @@ import csv
 import io
 import re
 from collections import defaultdict
+from urllib.parse import urlparse
 from bson import ObjectId
 
 ROOT_DIR = Path(__file__).parent
