@@ -930,6 +930,12 @@ const Dashboard = () => {
         }
       }
     };
+          {toast && (
+            <div className={`fixed bottom-6 right-6 z-50 px-4 py-2 rounded shadow-lg border ${toast.type==='success' ? 'bg-green-600 text-white border-green-700' : 'bg-blue-600 text-white border-blue-700'}`}>
+              {toast.message}
+            </div>
+          )}
+
     window.addEventListener('hashchange', handler);
     handler(); // run once on mount
     return () => window.removeEventListener('hashchange', handler);
