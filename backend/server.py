@@ -323,16 +323,182 @@ async def bulk_delete_annotations(payload: Dict[str, List[str]], current_user: U
     return {"deleted": len(ids)}
 
 # ========================
-# Admin endpoints (partial)
+# Admin endpoints
 # ========================
+
+# Admin User Management Models
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    role: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class BulkDeleteRequest(BaseModel):
+    ids: List[str]
+
+# Admin Users Endpoints
+@api_router.get("/admin/users")
+async def get_all_users(current_user: User = Depends(get_admin_user)):
+    """Get all users (admin only) - returns users without passwords"""
+    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(1000)
+    # Ensure is_active field exists (default to True if not present)
+    for user in users:
+        if "is_active" not in user:
+            user["is_active"] = True
+    return users
+
+@api_router.post("/admin/users", response_model=User)
+async def create_user(user_data: UserCreate, current_user: User = Depends(get_admin_user)):
+    """Create a new user (admin only)"""
+    existing_user = await db.users.find_one({"email": user_data.email})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    user = User(
+        email=user_data.email, 
+        full_name=user_data.full_name, 
+        role=user_data.role
+    )
+    user_dict = user.dict()
+    user_dict["password"] = hash_password(user_data.password)
+    user_dict["is_active"] = True  # New users are active by default
+    
+    await db.users.insert_one(user_dict)
+    return user
+
+@api_router.put("/admin/users/{user_id}")
+async def update_user(user_id: str, user_update: UserUpdate, current_user: User = Depends(get_admin_user)):
+    """Update user (admin only) - can update is_active, role, full_name"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    update_data = {}
+    if user_update.full_name is not None:
+        update_data["full_name"] = user_update.full_name
+    if user_update.role is not None:
+        if user_update.role not in [UserRole.ADMIN, UserRole.ANNOTATOR]:
+            raise HTTPException(status_code=400, detail="Invalid role")
+        update_data["role"] = user_update.role
+    if user_update.is_active is not None:
+        update_data["is_active"] = user_update.is_active
+    
+    if update_data:
+        await db.users.update_one({"id": user_id}, {"$set": update_data})
+    
+    updated_user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+    # Ensure is_active field exists
+    if "is_active" not in updated_user:
+        updated_user["is_active"] = True
+    return updated_user
+
+@api_router.delete("/admin/users/{user_id}")
+async def delete_user(user_id: str, current_user: User = Depends(get_admin_user)):
+    """Delete user (admin only) - prevents self-delete"""
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+    
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Delete user's annotations first
+    annotations_deleted = await db.annotations.delete_many({"user_id": user_id})
+    
+    # Delete the user
+    await db.users.delete_one({"id": user_id})
+    
+    return {
+        "message": "User deleted successfully",
+        "user_name": user.get("full_name", user.get("email", "")),
+        "annotations_deleted": annotations_deleted.deleted_count
+    }
+
+@api_router.post("/admin/users/bulk-delete")
+async def bulk_delete_users(request: BulkDeleteRequest, current_user: User = Depends(get_admin_user)):
+    """Bulk delete users (admin only) - skips current admin"""
+    user_ids = [uid for uid in request.ids if uid != current_user.id]  # Skip current admin
+    
+    if not user_ids:
+        return {"deleted": 0, "skipped": len(request.ids)}
+    
+    # Get user info before deletion
+    users_to_delete = await db.users.find({"id": {"$in": user_ids}}, {"_id": 0}).to_list(1000)
+    
+    # Delete annotations for these users
+    annotations_deleted = await db.annotations.delete_many({"user_id": {"$in": user_ids}})
+    
+    # Delete the users
+    result = await db.users.delete_many({"id": {"$in": user_ids}})
+    
+    return {
+        "deleted": result.deleted_count,
+        "skipped": len(request.ids) - len(user_ids),
+        "annotations_deleted": annotations_deleted.deleted_count,
+        "deleted_users": [{"id": u["id"], "name": u.get("full_name", u.get("email", ""))} for u in users_to_delete]
+    }
+
+# Admin Documents Endpoints
 @api_router.delete("/admin/documents/{document_id}")
 async def delete_document(document_id: str, current_user: User = Depends(get_admin_user)):
-    await db.documents.delete_one({"id": document_id})
+    """Delete document and cascade to sentences/annotations (admin only)"""
+    document = await db.documents.find_one({"id": document_id})
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Get sentence IDs for this document
     sentence_ids = await db.sentences.distinct("id", {"document_id": document_id})
-    await db.sentences.delete_many({"document_id": document_id})
+    
+    # Delete annotations for these sentences
+    annotations_deleted = 0
     if sentence_ids:
-        await db.annotations.delete_many({"sentence_id": {"$in": sentence_ids}})
-    return {"message": "Document deleted"}
+        result = await db.annotations.delete_many({"sentence_id": {"$in": sentence_ids}})
+        annotations_deleted = result.deleted_count
+    
+    # Delete sentences
+    sentences_deleted = await db.sentences.delete_many({"document_id": document_id})
+    
+    # Delete the document
+    await db.documents.delete_one({"id": document_id})
+    
+    return {
+        "message": "Document deleted successfully",
+        "document_name": document.get("filename", ""),
+        "sentences_deleted": sentences_deleted.deleted_count,
+        "annotations_deleted": annotations_deleted
+    }
+
+@api_router.post("/admin/documents/bulk-delete")
+async def bulk_delete_documents(request: BulkDeleteRequest, current_user: User = Depends(get_admin_user)):
+    """Bulk delete documents and cascade to sentences/annotations (admin only)"""
+    document_ids = request.ids
+    
+    if not document_ids:
+        return {"deleted": 0}
+    
+    # Get document info before deletion
+    documents_to_delete = await db.documents.find({"id": {"$in": document_ids}}, {"_id": 0}).to_list(1000)
+    
+    # Get all sentence IDs for these documents
+    sentence_ids = await db.sentences.distinct("id", {"document_id": {"$in": document_ids}})
+    
+    # Delete annotations for these sentences
+    annotations_deleted = 0
+    if sentence_ids:
+        result = await db.annotations.delete_many({"sentence_id": {"$in": sentence_ids}})
+        annotations_deleted = result.deleted_count
+    
+    # Delete sentences
+    sentences_result = await db.sentences.delete_many({"document_id": {"$in": document_ids}})
+    
+    # Delete the documents
+    documents_result = await db.documents.delete_many({"id": {"$in": document_ids}})
+    
+    return {
+        "deleted": documents_result.deleted_count,
+        "sentences_deleted": sentences_result.deleted_count,
+        "annotations_deleted": annotations_deleted,
+        "deleted_documents": [{"id": d["id"], "name": d.get("filename", "")} for d in documents_to_delete]
+    }
 
 @api_router.get("/documents/{document_id}/annotations")
 async def get_document_annotations(document_id: str, current_user: User = Depends(get_admin_user)):
