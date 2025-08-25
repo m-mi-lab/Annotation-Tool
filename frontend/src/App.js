@@ -866,8 +866,7 @@ const Dashboard = () => {
                   <Card><CardContent className="p-4"><div className="text-sm text-gray-600">Annotations</div><div className="text-2xl font-semibold">{analytics.total_annotations || 0}</div></CardContent></Card>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <Card><CardHeader><CardTitle>Category Counts</CardTitle></CardHeader><CardContent><img src={`${API}/analytics/tag-prevalence-chart`} alt="Category Counts Chart" className="w-full rounded border" /></CardContent></Card>
-                  <Card><CardHeader><CardTitle>Valence Distribution</CardTitle></CardHeader><CardContent><img src={`${API}/analytics/valence-chart`} alt="Valence Chart" className="w-80 h-80" /></CardContent></Card>
+                  <Card><CardHeader><CardTitle>Category Counts</CardTitle></CardHeader><CardContent><img src={`${API}/analytics/tag-prevalence-chart?token=${encodeURIComponent(localStorage.getItem('token')||'')}`} alt="Category Counts Chart" className="w-full rounded border" /></CardContent></Card>
                 </div>
               </CardContent>
             </Card>
