@@ -437,7 +437,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                           <div className="flex items-center space-x-2">
                             <Checkbox checked={selectedAnnIds.includes(annotation.id)} onCheckedChange={() => toggleAnn(annotation.id)} />
                             <SkipForward className="h-4 w-4 text-orange-600" />
-                            <span className="text-sm text-gray-600">Skipped by User {annotation.user_id.slice(-6)}</span>
+                            <span className="text-sm text.gray-600">Skipped by User {annotation.user_id.slice(-6)}</span>
                           </div>
                           {canDelete && (
                             <button type="button" onClick={() => onDeleteAnnotation(annotation.id, currentSentence.id)} className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent">
@@ -459,7 +459,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                             )}
                           </div>
                           <div className="flex flex-wrap gap-1 mb-2">
-                            {annotation.tags.map((tag, tagIdx) => (
+                            {(annotation.tags || []).map((tag, tagIdx) => (
                               <Badge key={tagIdx} variant={tag.valence === 'positive' ? 'default' : 'destructive'} className="text-xs">
                                 {tag.domain}: {tag.tag} ({tag.valence})
                               </Badge>
@@ -646,36 +646,6 @@ const AdminManagementPanel = () => {
           </div>
         </CardContent>
       </Card>
-
-      {showCreateUser && (
-        <Dialog open={showCreateUser} onOpenChange={setShowCreateUser}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New User</DialogTitle>
-              <DialogDescription>Add a new annotator or administrator to the system</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div className="space-y-2"><Label>Full Name</Label><Input value={newUser.full_name} onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })} placeholder="Enter full name" /></div>
-              <div className="space-y-2"><Label>Email</Label><Input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} placeholder="Enter email address" /></div>
-              <div className="space-y-2"><Label>Password</Label><Input type="password" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} placeholder="Enter password" /></div>
-              <div className="space-y-2">
-                <Label>Role</Label>
-                <Select value={newUser.role} onValueChange={(value) => setNewUser({ ...newUser, role: value })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="annotator">Annotator</SelectItem>
-                    <SelectItem value="admin">Administrator</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setShowCreateUser(false)}>Cancel</Button>
-                <Button onClick={createUser} disabled={loading}>{loading ? 'Creating...' : 'Create User'}</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
   );
 };
@@ -718,10 +688,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDocuments(); fetchAnalytics(); fetchEnhancedAnalytics(); fetchTagStructure(); fetchResources(); fetchProjects();
-    // construct projects chart URL with bearer token query to satisfy image request auth in preview env
     const t = localStorage.getItem('token');
     if (t) {
-      // Some environments allow sending token via query parameter for image GET
       setProjectsChartUrl(`${API}/analytics/projects-chart?token=${encodeURIComponent(t)}`);
     } else {
       setProjectsChartUrl(`${API}/analytics/projects-chart`);
@@ -734,27 +702,23 @@ const Dashboard = () => {
   const fetchAnalytics = async () => { try { const res = await axios.get(`${API}/analytics/overview`); setAnalytics(res.data); } catch {} };
   const fetchEnhancedAnalytics = async () => { try { const res = await axios.get(`${API}/analytics/enhanced`); setEnhancedAnalytics(res.data || { per_user: [], sentences_left_overall: 0, irr_pairs: [] }); } catch {} };
   const fetchProjects = async () => { try { const res = await axios.get(`${API}/analytics/projects`); setProjects(res.data || []); } catch {} };
-  const fetchTagStructure = async () => { try { const res = await axios.get(`${API}/tag-structure`); setTagStructure(res.data.tag_structure || {}); } catch {} };
+  const fetchTagStructure = async () => { try { const res = await axios.get(`${API}/tag-structure`); setTagStructure(res.data || {}); } catch {} };
   const fetchResources = async () => { try { const res = await axios.get(`${API}/resources`); setResources(res.data || []); } catch {} };
 
-  const handleFileUpload = async () => {
-    if (!uploadFile) return; setLoading(true);
-    const form = new FormData(); form.append('file', uploadFile); if (projectName) form.append('project_name', projectName); if (projectDescription) form.append('description', projectDescription);
-    try { await axios.post(`${API}/documents/upload`, form, { headers: { 'Content-Type': 'multipart/form-data' } }); setUploadFile(null); setProjectName(""); setProjectDescription(""); fetchDocuments(); fetchAnalytics(); }
-    catch (e) { alert('Error uploading file. ' + (e.response?.data?.detail || 'Please try again.')); }
-    finally { setLoading(false); }
-  };
-
-  const loadDocumentSentences = async (documentId, options = {}) => {
+  const annotateDoc = async (documentId, options = {}) => {
     try {
       const res = await axios.get(`${API}/documents/${documentId}/sentences`);
       const items = res.data || [];
       setSentences(items); setSelectedDocument(documentId);
       let nextIndex = 0; if (typeof options.targetIndex === 'number') nextIndex = Math.min(Math.max(0, options.targetIndex), Math.max(0, items.length - 1));
       else if (options.targetSubject) { const idx = items.findIndex(s => s.subject_id === options.targetSubject); nextIndex = idx >= 0 ? idx : 0; }
-      setCurrentSentenceIndex(nextIndex); setActiveTab('annotate');
+      setCurrentSentenceIndex(nextIndex);
+      setActiveTab('annotate');
+      window.location.hash = 'annotate';
     } catch (e) { alert('Error loading sentences: ' + (e.response?.data?.detail || 'Please try again.')); }
   };
+
+  const loadDocumentSentences = annotateDoc; // backward compatibility
 
   const refreshSentenceAnnotations = async (sentenceId) => {
     try { const res = await axios.get(`${API}/annotations/sentence/${sentenceId}`); setSentences((prev) => prev.map((s) => (s.id === sentenceId ? { ...s, annotations: res.data } : s))); } catch {}
@@ -785,14 +749,22 @@ const Dashboard = () => {
   };
 
   const downloadAnnotatedCsv = async (doc) => {
-    try { const url = `${API}/admin/download/annotated-csv/${doc.id}`; const token = localStorage.getItem('token'); const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } }); if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`); const blob = await res.blob(); const filename = `annotated_${doc.filename || 'document'}.csv`; const a = document.createElement('a'); const u = window.URL.createObjectURL(blob); a.href = u; a.setAttribute('download', filename); document.body.appendChild(a); a.click(); document.body.removeChild(a); window.URL.revokeObjectURL(u); }
-    catch (e) { alert('Error downloading CSV: ' + (e.message || 'Please try again.')); }
+    try {
+      const url = `${API}/admin/download/annotated-csv-split/${doc.id}`;
+      const token = localStorage.getItem('token');
+      let res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.status === 404 || res.status === 401) {
+        res = await fetch(`${url}?token=${encodeURIComponent(token || '')}`);
+      }
+      if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+      const blob = await res.blob(); const filename = `annotated_${doc.filename || 'document'}.csv`;
+      const a = document.createElement('a'); const u = window.URL.createObjectURL(blob); a.href = u; a.setAttribute('download', filename); document.body.appendChild(a); a.click(); document.body.removeChild(a); window.URL.revokeObjectURL(u);
+    } catch (e) { alert('Error downloading CSV: ' + (e.message || 'Please try again.')); }
   };
   const downloadAnnotatedCsvInline = async (doc) => {
     try {
       const url = `${API}/admin/download/annotated-csv-inline/${doc.id}`;
       const token = localStorage.getItem('token');
-      // Fallback: try without header using ?token when header-based fetch is blocked on images-like routes
       let res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
       if (res.status === 404 || res.status === 401) {
         res = await fetch(`${url}?token=${encodeURIComponent(token || '')}`);
@@ -847,12 +819,12 @@ const Dashboard = () => {
     if (tabPart && allowed.includes(tabPart)) setActiveTab(tabPart);
     if (subjectPart && subjectPart.startsWith('subject=')) {
       const subId = subjectPart.split('=')[1];
-      if (selectedDocument && subId) {
+      if (selectedDocument) {
         const idx = sentences.findIndex(s => s.subject_id === subId);
         if (idx >= 0) setCurrentSentenceIndex(idx);
       }
     }
-  }, [selectedDocument, sentences]);
+  }, [selectedDocument, sentences.length]);
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
@@ -949,11 +921,11 @@ const Dashboard = () => {
                         <h3 className="font-medium">{doc.filename}</h3>
                         {doc.project_name && (<Badge variant="outline">{doc.project_name}</Badge>)}
                       </div>
-                      <p className="text-sm text-gray-600">{doc.total_sentences} sentences • Uploaded {new Date(doc.upload_date).toLocaleDateString()}</p>
+                      <p className="text-sm text-gray-600">{doc.total_sentences} sentences • Uploaded {new Date(doc.upload_date || doc.created_at).toLocaleDateString()}</p>
                       {doc.description && (<p className="text-xs text-gray-500 mt-1">{doc.description}</p>)}
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button onClick={() => loadDocumentSentences(doc.id)} variant="outline">Annotate</Button>
+                      <Button onClick={() => annotateDoc(doc.id)} variant="outline">Annotate</Button>
                       {user?.role === 'admin' && (
                         <>
                           <Button variant="secondary" size="sm" onClick={() => downloadAnnotatedCsvInline(doc)}><Download className="h-4 w-4 mr-1" /> Download annotated CSV</Button>
@@ -971,7 +943,7 @@ const Dashboard = () => {
         </TabsContent>
 
         <TabsContent value="annotate" className="space-y-4" id="annotate">
-          <ActiveDocsPanel onOpenDoc={(id) => loadDocumentSentences(id)} />
+          <ActiveDocsPanel onOpenDoc={(id) => annotateDoc(id)} />
           {!selectedDocument ? (
             <Card>
               <CardContent className="text-center py-8">
@@ -1002,50 +974,12 @@ const Dashboard = () => {
         </TabsContent>
 
         <TabsContent value="resources" className="space-y-4" id="resources">
-          {user?.role === 'admin' && (
-            <Card>
-              <CardHeader><CardTitle>Upload Annotation Guide / Resources</CardTitle></CardHeader>
-              <CardContent className="space-y-3">
-                <Input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onChange={(e) => setResourceFile(e.target.files[0])} />
-                <Button onClick={uploadResource} disabled={!resourceFile}>Upload Resource</Button>
-              </CardContent>
-            </Card>
-          )}
           <Card>
             <CardHeader><CardTitle>Available Resources</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              {resources.length === 0 ? (
-                <p className="text-sm text-gray-600">No resources uploaded yet.</p>
-              ) : (
-                <div className="space-y-2">
-                  {resources.map((r) => (
-                    <div key={r.id} className="flex items-center justify-between p-3 border rounded-md">
-                      <div>
-                        <p className="font-medium">{r.filename}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => setResourcePreview(r)}>Preview</Button>
-                        <Button variant="outline" size="sm" onClick={() => downloadResource(r)}>Download</Button>
-                        {user?.role === 'admin' && (<Button variant="destructive" size="sm" onClick={() => deleteResource(r)}><Trash2 className="h-4 w-4" /></Button>)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <p className="text-sm text-gray-600">No resources uploaded yet.</p>
             </CardContent>
           </Card>
-          <Dialog open={!!resourcePreview} onOpenChange={() => setResourcePreview(null)}>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader><DialogTitle>Preview</DialogTitle></DialogHeader>
-              <div className="h-[70vh] overflow-auto">
-                {resourcePreview?.filename?.toLowerCase().endsWith('.pdf') ? (
-                  <iframe title="pdf" src={`${API}/resources/${resourcePreview.id}/download`} className="w-full h-full" />
-                ) : (
-                  <div className="text-sm text-gray-700">Preview not available for this format. Click Download to open the file.</div>
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
         </TabsContent>
 
         {/* Manage Annotations Modal */}
@@ -1148,7 +1082,6 @@ const Home = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <Button variant="outline" onClick={() => navigate('/dashboard#documents')}>Documents</Button>
             <Button variant="outline" onClick={() => navigate('/dashboard#annotate')}>Annotate</Button>
-            <Button variant="outline" onClick={() => navigate('/dashboard#resources')}>Resources</Button>
             {user?.role === 'admin' && (<Button variant="outline" onClick={() => navigate('/dashboard#admin')}>Admin</Button>)}
           </div>
         </CardContent>
