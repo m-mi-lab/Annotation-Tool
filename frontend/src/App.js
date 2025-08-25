@@ -1042,7 +1042,7 @@ const Dashboard = () => {
               </div>
               {resources.length === 0 ? (
                 <p className="text-sm text-gray-600">No resources uploaded yet.</p>
-              ) : (
+              ) : (<>
                 <div className="space-y-2">
                   {resources.map((r) => (
                     <div key={r.id} className="p-3 border rounded-md">
