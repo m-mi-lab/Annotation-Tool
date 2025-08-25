@@ -336,7 +336,7 @@ frontend:
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -344,6 +344,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ PASSED - CSV download buttons visible for admin users in Documents tab. Manage Annotations modal opens correctly and provides CSV download functionality."
+      - working: true
+        agent: "testing"
+        comment: "✅ SUCCESS - Both CSV download buttons (inline and split sentence) fully functional. Download annotated CSV (inline) and Download annotated CSV (split sentence) buttons present and working without 500 errors. Both download types initiate successfully without server errors."
   - task: "User/Document deletion UI refresh"
     implemented: true
     working: false
