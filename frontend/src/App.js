@@ -1219,7 +1219,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-3 mb-3 flex-wrap">
               <div>
                 <Label className="text-xs">Annotator</Label>
-                <Select value={filterAnnotator} onValueChange={setFilterAnnotator}>
+                <Select value={filterAnnotator} onValueChange={(v) => { setFilterAnnotator(v); setTimeout(()=>{},0); }}>
                   <SelectTrigger className="w-48"><SelectValue placeholder="All" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All</SelectItem>
