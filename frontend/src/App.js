@@ -109,7 +109,7 @@ const Header = () => {
               <div className="flex items-center space-x-2">
                 {user.role === "admin" && <Shield className="h-4 w-4 text-purple-600" title="Administrator" />}
                 <User className="h-4 w-4 text-gray-500" />
-                <button className="text-sm text-blue-700 underline" onClick={() => navigate("/dashboard#admin")}>
+                <button className="text-sm text-blue-700 underline" onClick={() => navigate("/account")}>
                   {user.full_name}
                 </button>
                 <Badge variant={user.role === "admin" ? "default" : "secondary"}>{user.role}</Badge>
