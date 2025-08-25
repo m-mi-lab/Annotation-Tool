@@ -36,6 +36,9 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 app = FastAPI(title="Social Determinants of Health Annotation Tool")
 
 # Create a router with the /api prefix
+# GridFS bucket for resources
+fs_bucket = AsyncIOMotorGridFSBucket(db)
+
 api_router = APIRouter(prefix="/api")
 
 # Security
