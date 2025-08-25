@@ -628,9 +628,9 @@ async def delete_document(document_id: str, current_user: User = Depends(get_adm
     }
 
 @api_router.post("/admin/documents/bulk-delete")
-async def bulk_delete_documents(request: BulkDeleteRequest, current_user: User = Depends(get_admin_user)):
+async def bulk_delete_documents(request: Dict[str, List[str]], current_user: User = Depends(get_admin_user)):
     """Bulk delete documents and cascade to sentences/annotations (admin only)"""
-    document_ids = request.ids
+    document_ids = request.get('ids') or request.get('document_ids') or []
     
     if not document_ids:
         return {"deleted": 0}
