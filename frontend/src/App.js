@@ -476,6 +476,8 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
 
   const progress = ((currentIndex + 1) / sentences.length) * 100;
 
+  useEffect(() => { fetchDefaultProject(); }, []);
+
   return (
     <div className="space-y-6">
       <Card>
