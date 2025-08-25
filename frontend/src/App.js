@@ -1296,6 +1296,24 @@ const Dashboard = () => {
                         <span className="text-xs text-gray-500">by {userMap[a.user_id]?.slice(0, 20) || a.user_id?.slice(-6)}</span>
                         {a.subject_id && (<span className="text-xs text-gray-500">• Subject {a.subject_id}</span>)}
                         <span className="text-xs text-gray-500">• Index {a.sentence_index}</span>
+        {/* Default Project Modal */}
+        <Dialog open={defaultProjectModalOpen} onOpenChange={setDefaultProjectModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Set Default Project</DialogTitle>
+              <DialogDescription>New uploads will use this project name.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <Label>Project Name</Label>
+              <Input value={defaultProjectInput} onChange={(e) => setDefaultProjectInput(e.target.value)} />
+              <div className="flex items-center gap-2 justify-end pt-2">
+                <Button variant="outline" onClick={() => setDefaultProjectModalOpen(false)}>Cancel</Button>
+                <Button onClick={saveDefaultProject}>Save</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
                       </div>
                       {!a.skipped && (
                         <div className="flex flex-wrap gap-1 mb-1">
