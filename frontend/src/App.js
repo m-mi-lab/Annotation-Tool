@@ -704,7 +704,24 @@ const Dashboard = () => {
   const fetchEnhancedAnalytics = async () => { try { const res = await axios.get(`${API}/analytics/enhanced`); setEnhancedAnalytics(res.data || { per_user: [], sentences_left_overall: 0, irr_pairs: [] }); } catch {} };
   const fetchProjects = async () => { try { const res = await axios.get(`${API}/analytics/projects`); setProjects(res.data || []); } catch {} };
   const fetchTagStructure = async () => { try { const res = await axios.get(`${API}/tag-structure`); setTagStructure(res.data || {}); } catch {} };
-  const fetchResources = async () => { try { const res = await axios.get(`${API}/resources`); setResources(res.data || []); } catch {} };
+  const [resourcesPage, setResourcesPage] = useState(1);
+  const [resourcesTotal, setResourcesTotal] = useState(0);
+  const [resourcesQuery, setResourcesQuery] = useState("");
+  const [resourcesKind, setResourcesKind] = useState("all");
+  const [resourcesMime, setResourcesMime] = useState("all");
+
+  const fetchResources = async (page = resourcesPage) => {
+    try {
+      const params = { page, page_size: 20 };
+      if (resourcesQuery) params.q = resourcesQuery;
+      if (resourcesKind !== 'all') params.kind = resourcesKind;
+      if (resourcesMime !== 'all') params.mime = resourcesMime;
+      const res = await axios.get(`${API}/resources`, { params });
+      setResources(res.data?.items || []);
+      setResourcesTotal(res.data?.total || 0);
+      setResourcesPage(res.data?.page || page);
+    } catch {}
+  };
   const addResourceLink = async (title, url) => { try { await axios.post(`${API}/admin/resources/link`, { title, url }); await fetchResources(); } catch (e) { alert('Error adding link: ' + (e.response?.data?.detail || 'Please try again.')); } };
 
   const annotateDoc = async (documentId, options = {}) => {
