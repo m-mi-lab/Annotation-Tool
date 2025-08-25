@@ -452,11 +452,14 @@ async def remove_tag_from_annotation(annotation_id: str, payload: RemoveTagPaylo
     if current_user.role != UserRole.ADMIN and ann.get("user_id") != current_user.id:
         raise HTTPException(status_code=403, detail="Not allowed")
     tags = ann.get("tags", [])
+    def norm(x):
+        return (x or "").strip().lower()
+    pdomain, pcat, ptag = norm(payload.domain), norm(payload.category), norm(payload.tag)
     def tag_matches(t):
         if isinstance(t, dict):
-            return t.get("domain") == payload.domain and t.get("category") == payload.category and t.get("tag") == payload.tag
+            return norm(t.get("domain")) == pdomain and norm(t.get("category")) == pcat and norm(t.get("tag")) == ptag
         else:
-            return getattr(t, "domain", None) == payload.domain and getattr(t, "category", None) == payload.category and getattr(t, "tag", None) == payload.tag
+            return norm(getattr(t, "domain", None)) == pdomain and norm(getattr(t, "category", None)) == pcat and norm(getattr(t, "tag", None)) == ptag
     new_tags = [t for t in tags if not tag_matches(t)]
     if not new_tags and not ann.get("skipped", False):
         await db.annotations.delete_one({"id": annotation_id})
