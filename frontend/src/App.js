@@ -724,7 +724,7 @@ const AdminManagementPanel = () => {
                 <Button variant="destructive" size="sm" onClick={bulkDeleteUsers} disabled={!selectedUserIds.length}>Delete selected</Button>
               </div>
               <Button variant="outline" size="sm" onClick={() => { setRefreshKey(prev => prev + 1); fetchUsers(); }} disabled={loading}>{loading ? "…" : "Refresh"}</Button>
-              <Button onClick={() => navigate('/account')}><Plus className="h-4 w-4 mr-2" /> Add User</Button>
+              <Button onClick={() => setShowCreateUser(true)}><Plus className="h-4 w-4 mr-2" /> Add User</Button>
             </div>
           </div>
         </CardHeader>
