@@ -132,7 +132,7 @@ const AccountPage = () => {
       showToast('Password changed', 'success');
       setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
     } catch (e) {
-      alert(e.response?.data?.detail || "Error changing password");
+      showToast(e.response?.data?.detail || 'Error changing password', 'error');
     } finally { setSaving(false); }
   };
 
