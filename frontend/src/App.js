@@ -898,7 +898,7 @@ const Dashboard = () => {
   const bulkDeleteAnnotations = async (annotationIds, sentenceId = null) => {
     if (!annotationIds?.length) return; if (!window.confirm(`Delete ${annotationIds.length} annotations?`)) return;
     try { await axios.post(`${API}/annotations/bulk-delete`, { annotation_ids: annotationIds }); if (sentenceId) await refreshSentenceAnnotations(sentenceId); if (manageAnnOpen && manageAnnDoc) await openManageAnnotations(manageAnnDoc); fetchAnalytics(); }
-    catch (e) { alert('Error bulk-deleting annotations: ' + (e.response?.data?.detail || 'Please try again.')); }
+    catch (e) { showToast('Error bulk-deleting annotations: ' + (e.response?.data?.detail || 'Please try again.'), 'error'); }
   };
 
   const createAnnotation = async (sentenceId, tags, notes, skipped = false) => {
