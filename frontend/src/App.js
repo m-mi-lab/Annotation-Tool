@@ -526,7 +526,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                       const res = await axios.post(`${API}/annotations/${annId}/remove-tag`, { domain: t.domain, category: t.category, tag: t.tag });
                       if (res?.data?.id) await refreshSentenceAnnotations(annotation.sentence_id);
                       else await refreshSentenceAnnotations(annotation.sentence_id);
-                    } catch (e) { alert('Error removing tag: ' + (e.response?.data?.detail || 'Please try again.')); }
+                    } catch (e) { showToast('Error removing tag: ' + (e.response?.data?.detail || 'Please try again.'), 'error'); }
                   };
                   return (
                     <div key={annotation.id} className="p-3 bg-blue-50 rounded-md">
