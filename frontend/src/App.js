@@ -461,7 +461,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
     setSelectedTags([]); setNotes("");
     showToast('Marked as skipped', 'info');
     if (currentIndex < sentences.length - 1) onIndexChange(currentIndex + 1);
-    else alert("Annotation complete for this document.");
+    else showToast('Annotation complete for this document.', 'info');
   };
 
   const toggleSelectAllAnns = () => {
