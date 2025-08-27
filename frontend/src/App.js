@@ -938,7 +938,7 @@ const Dashboard = () => {
       const filename = `annotated_inline_${doc.filename || 'document'}.csv`;
       const a = document.createElement('a'); const u = window.URL.createObjectURL(blob); a.href = u; a.setAttribute('download', filename); document.body.appendChild(a); a.click(); document.body.removeChild(a); window.URL.revokeObjectURL(u);
     } catch (e) {
-      alert('Error downloading CSV: ' + (e.message || 'Please try again.'));
+      showToast('Error downloading CSV: ' + (e.message || 'Please try again.'), 'error');
     }
   };
 
