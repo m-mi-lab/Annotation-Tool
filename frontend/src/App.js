@@ -663,7 +663,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
 };
 
 // Admin Management Panel (users)
-const AdminManagementPanel = () => {
+const AdminManagementPanel = ({ notify = (msg) => window.alert(msg) }) => {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [showCreateUser, setShowCreateUser] = useState(false);
