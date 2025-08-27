@@ -118,7 +118,7 @@ const AccountPage = () => {
     try {
       const res = await axios.put(`${API}/auth/me/profile`, { full_name: fullName });
       if (res?.data) setUser(res.data);
-      alert("Profile updated");
+      showToast('Profile updated', 'success');
     } catch (e) {
       alert(e.response?.data?.detail || "Error updating profile");
     } finally { setSaving(false); }
