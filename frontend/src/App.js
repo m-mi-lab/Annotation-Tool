@@ -120,7 +120,7 @@ const AccountPage = () => {
       if (res?.data) setUser(res.data);
       showToast('Profile updated', 'success');
     } catch (e) {
-      alert(e.response?.data?.detail || "Error updating profile");
+      showToast(e.response?.data?.detail || 'Error updating profile', 'error');
     } finally { setSaving(false); }
   };
 
