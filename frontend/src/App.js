@@ -125,7 +125,7 @@ const AccountPage = () => {
   };
 
   const changePassword = async () => {
-    if (newPassword !== confirmPassword) { alert("New passwords do not match"); return; }
+    if (newPassword !== confirmPassword) { showToast('New passwords do not match', 'error'); return; }
     setSaving(true);
     try {
       await axios.post(`${API}/auth/change-password`, { current_password: currentPassword, new_password: newPassword });
