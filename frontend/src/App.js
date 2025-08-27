@@ -129,7 +129,7 @@ const AccountPage = () => {
     setSaving(true);
     try {
       await axios.post(`${API}/auth/change-password`, { current_password: currentPassword, new_password: newPassword });
-      alert("Password changed");
+      showToast('Password changed', 'success');
       setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
     } catch (e) {
       alert(e.response?.data?.detail || "Error changing password");
