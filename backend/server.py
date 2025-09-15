@@ -462,7 +462,9 @@ async def create_annotation(annotation_data: AnnotationCreate, current_user: Use
             user_id=current_user.id,
             tags=annotation_data.tags,
             notes=annotation_data.notes,
-            skipped=False
+            skipped=False,
+            confidence=annotation_data.confidence,
+            duration_ms=annotation_data.duration_ms
         )
         await db.annotations.insert_one(annotation.dict())
         return annotation
