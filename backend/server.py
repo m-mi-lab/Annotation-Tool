@@ -186,6 +186,8 @@ class AnnotationCreate(BaseModel):
     tags: List[AnnotationTag] = []
     notes: Optional[str] = ""
     skipped: bool = False
+    confidence: Optional[int] = None  # 0-5 scale
+    duration_ms: Optional[int] = None  # time spent selecting tags for this sentence in ms
 
 class Annotation(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
