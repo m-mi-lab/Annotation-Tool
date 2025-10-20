@@ -1212,6 +1212,7 @@ const Dashboard = () => {
               onDeleteAnnotation={deleteAnnotation}
               onBulkDeleteAnnotations={bulkDeleteAnnotations}
               currentDocName={(documents.find(d => d.id === selectedDocument) || {}).filename}
+              documentId={selectedDocument}
             />
           )}
         </TabsContent>
