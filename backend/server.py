@@ -880,9 +880,6 @@ async def download_my_annotations_csv(document_id: str, current_user: User = Dep
     sentences = await db.sentences.find({"document_id": document_id}, {"_id": 0}).sort([("row_index",1),("sentence_index",1)]).to_list(100000)
     sentence_map = {s["id"]: s for s in sentences}
     
-    # Get user display name
-    user_display = current_user.full_name or current_user.email or current_user.id
-    
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["document_id","sentence_id","subject_id","row_index","sentence_index","sentence_text","tag_domain","tag_category","tag","valence","notes","is_skipped","confidence","duration_ms"]) 
