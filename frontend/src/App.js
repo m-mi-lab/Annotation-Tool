@@ -880,6 +880,11 @@ const Dashboard = () => {
   const [filterText, setFilterText] = useState('');
   const [userMap, setUserMap] = useState({});
   const [filterSubject, setFilterSubject] = useState('all');
+  const [toast, setToast] = useState(null);
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 1600);
+  };
 
   useEffect(() => {
     fetchDocuments(); fetchAnalytics(); fetchEnhancedAnalytics(); fetchTagStructure(); fetchResources(); fetchProjects();
