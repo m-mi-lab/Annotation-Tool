@@ -399,6 +399,32 @@ frontend:
         agent: "testing"
         comment: "❌ FAILED - Delete buttons for documents not visible in admin interface during testing. This functionality needs investigation and fixing."
 
+
+  - task: "Annotator Download Buttons in Annotation Interface"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added 'My CSV' and 'My Paragraphs' download buttons in the annotation interface header for annotators to export their own work"
+
+  - task: "Admin Download for Selected Annotator in Manage Annotations Modal"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added 'Download for selected user' button in Manage Annotations modal filter section that uses admin endpoint with user_id filter"
+
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
