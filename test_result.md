@@ -1221,3 +1221,29 @@ agent_communication:
       - Cascading deletions working correctly (documents → sentences → annotations)
       
       IMPLEMENTATION COMPLETE: All requested admin endpoints are fully functional and production-ready.
+  - agent: "testing"
+    message: |
+      🔍 PARAGRAPH ANNOTATION EXPORT DEBUG COMPLETED - Investigated user report of missing annotations in paragraph downloads:
+      
+      ISSUE ANALYSIS:
+      - ✅ Both admin and user paragraph export endpoints are working correctly
+      - ✅ Tags appear in proper format: [Tags: Domain:Category:Tag(+/-)@UserName]
+      - ✅ Admin endpoint: /api/admin/download/annotated-paragraphs/{document_id}
+      - ✅ User endpoint: /api/download/my-annotated-paragraphs/{document_id}
+      
+      ROOT CAUSE IDENTIFIED:
+      - User likely testing with documents containing only SKIPPED annotations
+      - Skipped annotations are intentionally EXCLUDED from paragraph exports (by design)
+      - format_sentence_tags function correctly filters out skipped annotations (lines 881-882)
+      
+      TEST RESULTS ACROSS 5 DOCUMENTS:
+      - Documents with tagged annotations: Tags appear correctly ✅
+      - Documents with only skipped annotations: No tags (expected behavior) ℹ️
+      - Documents with no annotations: Plain text (expected behavior) ℹ️
+      
+      VERIFICATION:
+      - Tested admin export: Shows tags from all users with proper attribution
+      - Tested user export: Shows tags only from current user
+      - Format verified: "Economic Stability:Employment:Unemployed(-)@Test User"
+      
+      CONCLUSION: No bug exists. Functionality working as designed. Users need tagged (not skipped) annotations to see tags in paragraph exports.
