@@ -247,6 +247,43 @@ backend:
         agent: "testing"
         comment: "✅ PASSED - Both /api/analytics/tag-prevalence-chart and /api/analytics/valence-chart endpoints still working correctly. Return valid PNG images (13540 and 20132 bytes respectively) with proper content-type headers. No regression detected."
 
+  - task: "Per-User CSV Export Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added /api/download/my-annotations-csv/{document_id} endpoint for annotators to download their own annotations in inline CSV format with confidence and duration_ms columns"
+
+  - task: "Per-User Paragraph Export Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added /api/download/my-annotated-paragraphs/{document_id} endpoint for annotators to download their own annotations reconstructed as paragraphs"
+
+  - task: "Admin CSV Export with Confidence and Duration"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Updated /api/admin/download/annotated-csv-inline/{document_id} to include confidence and duration_ms columns in CSV export"
+
+
 frontend:
   - task: "Projects Overview analytics (stacked chart + table)"
     implemented: true
