@@ -6,7 +6,7 @@ import csv
 from datetime import datetime
 
 class RegressionTester:
-    def __init__(self, base_url="https://sdoh-tagger.preview.emergentagent.com/api"):
+    def __init__(self, base_url="https://socdetect-app.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.token = None
         self.admin_token = None

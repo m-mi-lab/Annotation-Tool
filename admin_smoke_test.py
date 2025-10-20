@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 
 def test_admin_endpoints():
-    base_url = "https://sdoh-tagger.preview.emergentagent.com/api"
+    base_url = "https://socdetect-app.preview.emergentagent.com/api"
     
     # Login as admin
     login_response = requests.post(f"{base_url}/auth/login", 

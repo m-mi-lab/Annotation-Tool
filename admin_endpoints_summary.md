@@ -243,7 +243,7 @@ async def get_user_analytics(current_user: User = Depends(get_admin_user)):
 
 ### Prerequisites
 - Admin credentials: `admin@sdoh.com` / `admin123`
-- Backend running at: `https://sdoh-tagger.preview.emergentagent.com/api`
+- Backend running at: `https://socdetect-app.preview.emergentagent.com/api`
 
 ### Test Sequence
 ```bash
@@ -254,20 +254,20 @@ python admin_smoke_test.py
 ### Manual RBAC Validation
 ```bash
 # 1. Login as admin
-curl -X POST "https://sdoh-tagger.preview.emergentagent.com/api/auth/login" \
+curl -X POST "https://socdetect-app.preview.emergentagent.com/api/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@sdoh.com","password":"admin123"}'
 
 # 2. Test admin endpoint (should return 200)
 curl -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
-  "https://sdoh-tagger.preview.emergentagent.com/api/admin/users"
+  "https://socdetect-app.preview.emergentagent.com/api/admin/users"
 
 # 3. Test without token (should return 401)
-curl "https://sdoh-tagger.preview.emergentagent.com/api/admin/users"
+curl "https://socdetect-app.preview.emergentagent.com/api/admin/users"
 
 # 4. Test with regular user token (should return 403)
 curl -H "Authorization: Bearer REGULAR_USER_TOKEN" \
-  "https://sdoh-tagger.preview.emergentagent.com/api/admin/users"
+  "https://socdetect-app.preview.emergentagent.com/api/admin/users"
 ```
 
 ### Response Shape Validation

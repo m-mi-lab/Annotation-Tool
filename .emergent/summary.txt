@@ -1,110 +1,88 @@
 <analysis>
-The AI engineer successfully built an SDOH annotation tool from scratch, incorporating a full user authentication system, role-based access control (admin/annotator), and an advanced annotation interface. Key features like structured tags with valence selection, skip functionality, and analytics were implemented. However, a recurring and persistent challenge has been ensuring the frontend UI accurately reflects user and document deletions in real-time, despite multiple debugging attempts and diverse strategies (optimistic updates, cache-busting, forced re-renders). The trajectory demonstrates a cycle of implementing a fix, testing, user reporting failure, and debugging again, particularly around state management and UI synchronization. The current state has just started addressing annotation deletion and CSV download, but the core deletion UI issue remains.
+The AI engineer began by stabilizing the SDOH annotation tool, fixing initial UI rendering and  compilation errors. Key features like a Resources page, Home page, bulk deletion, account management, and enhanced analytics with server-rendered charts were progressively added. A significant focus was on refining the annotation interface with subject-based navigation, individual tag toggling, valence-based styling, and comprehensive keyboard shortcuts. The engineer also addressed persistent UI 404s and Not Found errors by implementing missing backend endpoints (e.g., admin users, resources) and robust authentication handling (token query params, global 401 interceptor). CSV exports were extensively refined, including inline and paragraph formats, and a default project management system was introduced. The work culminated in converting all alerts/confirms to toasts and implementing per-user and combined annotation exports with detailed user information.
 </analysis>
 
 <product_requirements>
-The user requires a web application to upload CSV dataframes containing de-identified health records (specifically discharge summaries). The application needs to extract sections, split them into individual sentences, and allow multiple users (annotators) to add tags based on the five domains of Social Determinants of Health (SDOH). Key features include:
-1.  **User Authentication:** A full user authentication system.
-2.  **Annotation Collection:** Collect individual annotations for each sentence.
-3.  **Metrics/Analytics:** A page to display inter-rater reliability, tag prevalence, and other relevant metrics (documents, sentences, annotations, tagged, skipped, annotators).
-4.  **Structured Tags:** Ability to parse a Word document containing domain headings and bullet point subheadings to create a multi-select tag interface.
-5.  **Valence Selection:** For each tag, an option to input positive or negative valence (e.g., presence or absence of a relationship).
-6.  **Skip Functionality:** A Skip or No SDOH Content button to move to the next sentence if none of the domains apply, and automatically advance to the next sentence, returning to the top of the page.
-7.  **Admin Functionality:**
-    *   Admin accounts to upload CSV files for all annotators.
-    *   Admin user management (create, view, activate/deactivate, delete users, assign roles).
-    *   Centralized document management for admins (upload, delete).
-    *   Admin should be able to download the annotated CSV file.
-8.  **UI/UX Enhancements:**
-    *   Horizontal toolbar for navigation tabs (Manage, Upload, Documents, Annotate, Analytics).
-    *   Confirmation pop-up for user/document deletion.
-9.  **Annotation Persistence:** Annotations should be tied to individual sentences and reset when navigating between sentences. After annotating the last sentence, it should return to the home page (Documents tab).
-10. **Consistent Annotator ID:** All annotations should be associated with the currently logged-in user.
+The core requirement was a web app for annotating de-identified health records from CSV, featuring user authentication, structured tag annotation (SDOH domains, valence, skip), metrics (IRR, prevalence), and admin functions (CSV upload/delete, user management, export).
+
+Key features added throughout development:
+- Resources Page: Admin upload, all user download, with preview for PDFs/images, search, filter, pagination.
+- Home Page: Quick links, default landing.
+- Bulk Deletion: Users, documents, annotations.
+- Account Management: Change password, update display name.
+- Message Board (UI present, functionality not detailed in trajectory).
+- Enhanced Analytics: Per-user stats, sentences left, IRR, server-rendered category/project charts.
+- Subject-Based Annotation: Detect subject IDs, prev/next buttons.
+- Document/Annotation Export: Original, inline annotated CSV (per-tag rows, detailed columns), annotated paragraphs (reconstructs original text with inline tags), per-user downloads.
+- Default Project Management: Admin sets a global project name, new uploads use it, bulk reassign existing documents.
+- Annotation UI: Individual tag toggling, valence styling (green/red), keyboard shortcuts, Save/Save+Prev/Save+Next buttons, auto-advance on skip, toast notifications, global confirmation dialogs.
 </product_requirements>
 
 <key_technical_concepts>
--   **Full-stack Technologies**: React (frontend), FastAPI (backend), MongoDB (database).
--   **Authentication**: JWT for tokens, bcrypt for password hashing.
--   **UI Framework**: shadcn/ui components, Tailwind CSS for styling.
--   **State Management**: React's ,  for component lifecycle and data synchronization.
--   **API Communication**: Axios for HTTP requests, Pydantic for data validation/serialization.
--   **Data Handling**: MongoDB ODM (Motor), UUIDs for IDs, ISO strings for DateTime.
--   **Scalability**: Async/await in Python, optimistic UI updates (attempted).
+- **Full-stack**: React, FastAPI, MongoDB.
+- **Authentication**: JWT, .
+- **UI**: shadcn/ui, Tailwind CSS.
+- **API**: Axios, Pydantic.
+- **Data**: MongoDB, GridFS.
+- **Charting**: Matplotlib.
+- **ID Management**: UUIDs.
 </key_technical_concepts>
 
 <code_architecture>
 
 
 -   
-    -   **Summary**: This is the core FastAPI backend application. It defines all API endpoints, handles user authentication, document uploads, sentence processing, annotation storage, user management, and analytics data retrieval. It interacts with MongoDB for data persistence.
+    -   **Summary**: The core FastAPI backend. Manages API endpoints for auth, user, document, resource, sentence, and annotation handling, plus analytics. Interacts with MongoDB.
     -   **Changes Made**:
-        -   **Authentication**: Implemented user registration, login, and JWT token generation/verification.
-        -   **Models**: Defined Pydantic models for , , , , and  to ensure data validation and serialization. Switched to UUIDs for IDs and handled DateTime serialization.
-        -   **API Endpoints**:
-            -   , : User authentication.
-            -   , : Admin user management (CRUD).
-            -   , : Admin document upload/deletion.
-            -   : Retrieve all documents.
-            -   : Retrieve sentences for a document.
-            -   : Save/retrieve/delete annotations for a sentence.
-            -   : Retrieve dynamic tag structure from parsed Word document.
-            -   : Provides application analytics.
-            -   : (Currently being added) Endpoint for downloading annotated CSV.
-        -   **Role-Based Access**: Integrated  dependency for admin-specific endpoints.
-        -   **Document Processing**: Logic for parsing uploaded CSVs into sentences.
-        -   **Annotation Logic**: Updated to store structured tags (domain, category, tag, valence).
-        -   **Error Handling**: Added robust error handling and logging.
+        -   **Authentication**: Added ,  endpoints. Implemented RBAC for admin routes.  for token validation in image requests.
+        -   **Models**:  now stores , , . New , ,  models.  model expanded with  and .
+        -   **API Endpoints**: Comprehensive CRUD for ,  (list, download). Bulk deletion for users, documents, annotations. Enhanced analytics (, , , ,  (later removed)). New download endpoints:  (expanded format), , , and planned  endpoints. Admin settings endpoints for .  CRUD endpoints.
+        -   **Document Processing**: Robust  detection, intelligent text column selection, sentence splitting,  assignment (now from default setting).
+        -   **Annotation Logic**: Skip enforces deletion of other tags for the same user/sentence. Individual tag removal from an annotation implemented.
+        -   **Error Handling**: Refined for CSV export, token validation in image requests, and serializer robustness.
 
 -   
-    -   **Summary**: The main React application component. It manages the application's global state, routing (via tabs), user authentication, and renders different UI sections (login, dashboard, admin panels, annotation interface). It uses Axios to communicate with the FastAPI backend.
+    -   **Summary**: The main React application. Manages global state, routing, authentication, and renders UI components, communicating with FastAPI.
     -   **Changes Made**:
-        -   **Authentication Flow**: Implemented login, logout, and token management using .
-        -   **State Management**: Extensive use of  and  for managing user state, documents, sentences, active tab, form data, loading states, and error messages.
-        -   **UI Components**: Integrated  components for buttons, input fields, dialogs, tabs, cards, and custom UI elements.
-        -   **Dashboard**: Displays document list, annotation interface, analytics.
-        -   **Admin Panels**:
-            -   : UI for user creation, listing, activation/deactivation, and deletion.
-            -   : UI for admin to upload CSV documents with project metadata.
-        -   **Annotation Interface**:
-            -   Dynamic rendering of tag selection based on the backend tag structure.
-            -   Multi-select for tags, valence selection (positive/negative).
-            -   Navigation for next/previous sentences.
-            -   Skip - No SDOH Content button.
-            -   Loading indicators.
-        -   **UI Layout**: Implemented horizontal toolbar for main navigation.
-        -   **Deletion Logic**: Multiple iterations on user/document deletion to address UI not updating, involving optimistic updates, forced re-renders, and cache-busting (later simplified).
-        -   **Debugging**: Added numerous  statements for debugging frontend state and API interactions.
-        -   **Cleanup**: Removed debugging logs in later stages.
+        -   **Authentication**: Login/logout, Account page. Global 401 interceptor for re-login.
+        -   **State Management**: Expanded for resources, analytics, subjects, bulk actions, and toasts.
+        -   **UI Components**: Integrated new  types, file pickers, dialogs, toasts. Custom confirmation dialog.
+        -   **Routing**:  default, deep-linking,  page.
+        -   **Dashboard/Panels**:  (users list, CRUD, bulk delete),  (CSV upload, bulk delete, project settings, all export types),  (active docs, subject navigation, new tag buttons with valence toggles, keyboard shortcuts, Save/Save+Prev/Save+Next, confidence slider, timer),  tab (upload, list, search, filter, pagination, inline preview, add external link).
+        -   **Analytics**: Integrated server-rendered charts (Category, Projects Overview).
+        -   **Deletion Logic**: Fixed UI updates, now uses global confirm dialogs. Individual tag removal from existing annotations.
+        -   **Refactoring**: Component structure, hash navigation handling, removal of stray references, toast integration for all notifications.
+
+-   
+    -   **Summary**: Python backend dependencies.
+    -   **Changes Made**: Added  for server-side chart generation,  for file uploads.
 
 -    and 
-    -   **Summary**: Provide global and component-specific styling using Tailwind CSS.
-    -   **Changes Made**: Customized styles for a modern UI, including toolbar, cards, and input elements, adhering to design guidelines.
-
--   
-    -   **Summary**: Contains various shadcn/ui components used throughout the application to ensure a consistent and modern UI/UX.
-    -   **Changes Made**: Used existing components directly as specified, with minor adjustments to imports or props as needed for specific functionalities like , , , , , , etc.
+    -   **Summary**: Styling using Tailwind CSS.
+    -   **Changes Made**: Custom styles for new components and features.
 </code_architecture>
 
 <pending_tasks>
--   **User/Document Deletion UI:** The visual entries for deleted users and documents on the management screens are not disappearing, and the user count does not update, even after refresh. (User is still reporting this in Chat Message 435 and 423)
--   **Annotation Save Navigation:** The Save Annotation button takes the user back to the first sentence instead of staying on the current one.
--   **Annotation Skip Navigation:** The Skip button takes the user back to the top of the page instead of advancing to the next sentence.
--   **Annotation Deletion:** The current way to delete annotations is missing (functionality was added, but needs verification and potentially UI integration).
--   **Admin CSV Download:** Finish implementing the functionality for admins to download the annotated CSV file.
+- Add per-user my-annotations export endpoints ( and ) and corresponding annotator-facing UI buttons.
+- Add a Download CSV for selected annotator button in the Manage Annotations modal (utilizing admin endpoints with  filter).
+- Include  and  as optional columns in CSV exports.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was attempting to resolve the persistent issue where deleting users or documents did not visually update the frontend UI. After several failed attempts with optimistic updates, cache-busting, and forced re-renders, the AI engineer tried a completely new, simple approach (messages 434-435) focusing on immediate UI removal with background API calls. However, the user reported that this latest attempt also failed (Chat Message 435), stating This still is not working. It is exactly the same as before.
+Immediately before this summary request, the AI engineer was finalizing the implementation of enhanced annotation data exports, specifically addressing user requests for per-user and combined annotation downloads.
 
-Following this, the AI engineer shifted focus to other outstanding issues mentioned by the user in the same message.
-The current work is:
-1.  **Addressing Annotation Interface Issues**: A general fix was initiated for the annotation interface problems (related to save/skip navigation). (Chat Message 437)
-2.  **Implementing Annotation Deletion**: Frontend functionality to delete annotations was started ( function in ) and a backend endpoint for annotation deletion () was added in . (Chat Messages 438-443)
-3.  **Implementing Admin CSV Download**: The backend endpoint for an admin to download the annotated CSV file () was being added to . (Chat Message 444)
+The current state of the product includes:
+-   **Admin Combined Exports**:
+    -   : Provides an expanded CSV format with detailed columns including  and  (full name or email fallback), with multiple tags for a sentence producing multiple rows.
+    -   : Exports reconstructed paragraphs with inline annotations, formatted as , and explicitly excludes skipped annotations.
+-   **Frontend UI for Exports**: The Download annotated CSV button in the Documents tab now triggers the updated inline CSV export.
+-   **Default Project Management**: Admins can set a default project name via a modal in the Documents tab, which is used for new document uploads and can be bulk-reassigned to existing documents.
+-   **Comprehensive UI/UX**: The application features a fully functional annotation interface with individual tag toggling, valence styling, keyboard shortcuts, multi-option save buttons, confidence slider (required for save, optional for skip), and auto-advance on skip. All  and  calls have been replaced with non-intrusive toasts and a custom confirmation dialog for a consistent user experience.
+-   **Robustness**: Backend endpoints for admin users, documents, and resources are in place with RBAC. Image and PDF chart/preview loading now handles authentication via token query parameters.
 
-The state of the product is that core features (authentication, role management, document upload, annotation with structured tags/valence, analytics, horizontal toolbar) are largely functional, but the user management UI's deletion persistence, annotation navigation, and annotation deletion's visual feedback remain critical issues. The CSV download for admins is partially implemented (backend endpoint in progress).
+The immediate work concluded with the backend and updated frontend supporting these advanced export capabilities for admins, with pending UI additions for annotator self-service and further export column inclusions.
 </current_work>
 
 <optional_next_step>
-Re-evaluate and fix the user/document deletion functionality to ensure immediate and persistent UI updates on the management screens.
+Implement the per-user my-annotations export endpoints and their corresponding UI buttons for annotators.
 </optional_next_step>
