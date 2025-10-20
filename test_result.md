@@ -897,6 +897,36 @@ backend:
         agent: "testing"
         comment: "✅ PASSED - Admin document deletion working correctly. Admin-only access, cascades deletion to sentences and annotations. Proper cleanup of related data."
 
+
+  - agent: "main"
+    message: |
+      IMPLEMENTATION: Per-User Annotation Export Feature
+      
+      Added three new backend endpoints:
+      1. /api/download/my-annotations-csv/{document_id} - Annotators can download their own annotations in inline CSV format
+      2. /api/download/my-annotated-paragraphs/{document_id} - Annotators can download their own annotations as reconstructed paragraphs
+      3. Updated /api/admin/download/annotated-csv-inline/{document_id} - Now includes confidence and duration_ms columns
+      
+      Frontend Updates:
+      1. Added "My CSV" and "My Paragraphs" download buttons in the annotation interface header (StructuredAnnotationInterface component)
+      2. Added "Download for selected user" button in Manage Annotations modal that uses admin endpoint with user_id filter (only enabled when a specific user is selected)
+      
+      All new endpoints support proper authentication and follow the same patterns as existing download endpoints.
+      
+      TESTING INSTRUCTIONS:
+      Backend testing should verify:
+      - /api/download/my-annotations-csv/{document_id} returns CSV with current user's annotations only
+      - /api/download/my-annotated-paragraphs/{document_id} returns paragraphs with current user's tags only
+      - Admin CSV export includes confidence and duration_ms columns
+      - Proper authentication enforcement on all endpoints
+      
+      Frontend testing should verify:
+      - Download buttons appear in annotation interface header
+      - Buttons trigger correct downloads with proper filenames
+      - Admin's "Download for selected user" button in Manage Annotations modal works correctly
+      - Button is disabled when "All" annotators is selected
+      
+      Please test all new backend endpoints first, then proceed with frontend testing.
   - task: "CORS Configuration"
     implemented: true
     working: true
