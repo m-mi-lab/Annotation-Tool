@@ -816,7 +816,8 @@ async def download_annotated_paragraphs(document_id: str, current_user: User = D
     ann_user_ids = set()
     for a in anns:
         by_sid.setdefault(a['sentence_id'], []).append(a)
-        if a.get('user_id'): ann_user_ids.add(a['user_id'])
+        if a.get('user_id'):
+            ann_user_ids.add(a['user_id'])
     # Build user display map (full_name or email)
     users = await db.users.find({"id": {"$in": list(ann_user_ids)}}, {"_id": 0}).to_list(1000)
     user_display = {u['id']: (u.get('full_name') or u.get('email') or u['id']) for u in users}
