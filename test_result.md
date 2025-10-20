@@ -702,6 +702,40 @@ agent_communication:
       - Account page after successful name change
       
       ALL REQUESTED TESTING REQUIREMENTS SUCCESSFULLY COMPLETED.
+  - agent: "testing"
+    message: |
+      ✅ PER-USER ANNOTATION EXPORT RE-TESTING COMPLETED - All functionality now working correctly after missing endpoint implementation:
+      
+      BACKEND ENDPOINT VERIFICATION:
+      - ✅ /api/annotations/active-docs endpoint now implemented and working (was missing, causing 405 errors)
+      - ✅ Returns active documents with progress data: [{"document_id":"155984e7...","filename":"test_discharge_summaries.csv","total_sentences":17,"annotated_count":5,"progress":0.294...}]
+      - ✅ /api/download/my-annotations-csv/{document_id} working correctly, returns CSV with user's annotations
+      - ✅ /api/download/my-annotated-paragraphs/{document_id} working correctly, returns CSV with reconstructed paragraphs
+      
+      FRONTEND CODE VERIFICATION:
+      - ✅ Download buttons properly implemented in StructuredAnnotationInterface component (lines 487-538)
+      - ✅ "My CSV" button with download icon and correct filename format: my_annotations_{username}_{document_name}.csv
+      - ✅ "My Paragraphs" button with download icon and correct filename format: my_paragraphs_{username}_{document_name}.csv
+      - ✅ Proper error handling and toast notifications implemented
+      - ✅ Buttons positioned correctly in annotation interface header alongside sentence counter badge
+      
+      ADMIN FUNCTIONALITY VERIFICATION:
+      - ✅ Admin login successful (admin@sdoh.com / admin123)
+      - ✅ Manage Annotations modal opens correctly from Documents tab
+      - ✅ "Download for selected user" button present and functional
+      - ✅ Button correctly disabled when "All" annotators selected, enabled when specific user selected
+      - ✅ Annotator dropdown working with 14 available users
+      - ✅ All filter elements present: Annotator, Type, Subject, Text search
+      
+      ACTIVE DOCUMENTS PANEL:
+      - ✅ Panel loads correctly showing documents with annotation progress
+      - ✅ Me/Team view toggle available for admin users
+      - ✅ Resume buttons functional for continuing annotation work
+      
+      RESOLUTION SUMMARY:
+      The critical issue preventing annotation interface loading has been resolved with the implementation of the missing /api/annotations/active-docs endpoint. All per-user download functionality is now working as designed. Both frontend UI components and backend API endpoints are functioning correctly.
+      
+      STATUS: All test scenarios from review request successfully completed.
 
 
 backend:
