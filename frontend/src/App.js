@@ -1353,6 +1353,35 @@ const Dashboard = () => {
                 <Input value={filterText} onChange={(e) => setFilterText(e.target.value)} placeholder="Search in sentence text or notes..." />
               </div>
               <div className="ml-auto flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={filterAnnotator === 'all'}
+                  onClick={async () => {
+                    if (!manageAnnDoc || filterAnnotator === 'all') return;
+                    try {
+                      const url = `${API}/admin/download/annotated-csv-inline/${manageAnnDoc.id}?user_id=${filterAnnotator}`;
+                      const token = localStorage.getItem('token');
+                      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+                      if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+                      const blob = await res.blob();
+                      const a = document.createElement('a');
+                      const u = window.URL.createObjectURL(blob);
+                      a.href = u;
+                      const userName = userMap[filterAnnotator] || filterAnnotator;
+                      a.setAttribute('download', `${userName}_annotations_${manageAnnDoc.filename}.csv`);
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      window.URL.revokeObjectURL(u);
+                      showToast(`Downloaded CSV for ${userName}`, 'success');
+                    } catch (e) {
+                      showToast('Error downloading CSV: ' + (e.message || 'Please try again.'), 'error');
+                    }
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-1" /> Download for selected user
+                </Button>
                 <Button variant="destructive" size="sm" disabled={!selectedAnnIds.length} onClick={bulkDeleteDocAnnotations}>Delete selected</Button>
               </div>
             </div>
