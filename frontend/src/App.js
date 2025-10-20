@@ -1468,6 +1468,15 @@ const Dashboard = () => {
           </DialogContent>
         </Dialog>
       </Tabs>
+      {toast && (
+        <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg z-50 ${
+          toast.type === 'error' ? 'bg-red-500 text-white' : 
+          toast.type === 'info' ? 'bg-blue-500 text-white' : 
+          'bg-green-500 text-white'
+        }`}>
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 };
