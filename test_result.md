@@ -462,7 +462,27 @@ agent_communication:
       FRONTEND TESTING INSTRUCTIONS: Please login using the seeded admin credentials to ensure admin UI is visible: email: admin@sdoh.com, password: admin123. Do not register a new user (defaults to annotator). After login, navigate to /dashboard and confirm the Admin tab is present. Then proceed with the Projects Overview and Manage Annotations tests as outlined in test_plan.
   - agent: "testing"
     message: |
-      ✅ END-TO-END UI TESTING COMPLETED - Comprehensive testing of new frontend features completed successfully:
+      ✅ PER-USER ANNOTATION EXPORT TESTING COMPLETED - Comprehensive testing of new per-user download features:
+      
+      ADMIN DOWNLOAD FOR SELECTED USER:
+      - ✅ 'Download for selected user' button found in Manage Annotations modal
+      - ✅ Button correctly disabled when 'All' annotator selected
+      - ✅ Button enabled when specific user selected from dropdown
+      - ✅ Download successful with correct filename format: 'Rachel Polcyn_annotations_test_discharge_summaries.csv.csv'
+      - ✅ All filter dropdowns (Annotator, Type, Subject, Text) functional
+      - ✅ Admin role-based access control working correctly
+      
+      ANNOTATOR DOWNLOAD BUTTONS:
+      - ❌ CRITICAL ISSUE: Cannot test 'My CSV' and 'My Paragraphs' buttons due to annotation interface loading failure
+      - ❌ Root cause: 405 error on /api/annotations/active-docs endpoint (endpoint missing from backend)
+      - ✅ Code review confirms buttons are properly implemented in StructuredAnnotationInterface component
+      - ✅ Backend endpoints /api/download/my-annotations-csv/{document_id} and /api/download/my-annotated-paragraphs/{document_id} tested and working in previous tests
+      
+      RECOMMENDATION:
+      - Main agent needs to implement missing /api/annotations/active-docs endpoint or fix annotation interface loading
+      - Once annotation interface loads, 'My CSV' and 'My Paragraphs' buttons should work correctly based on code implementation
+      
+      OVERALL STATUS: 1/2 features fully tested and working, 1/2 blocked by missing backend endpoint
       
       AUTHENTICATION & ADMIN ACCESS:
       - ✅ Admin user login successful with proper role-based access
