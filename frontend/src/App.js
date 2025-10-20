@@ -1420,6 +1420,24 @@ const Dashboard = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Default Project Modal */}
+        <Dialog open={defaultProjectModalOpen} onOpenChange={setDefaultProjectModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Set Default Project</DialogTitle>
+              <DialogDescription>New uploads will use this project name.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <Label>Project Name</Label>
+              <Input value={defaultProjectInput} onChange={(e) => setDefaultProjectInput(e.target.value)} />
+              <div className="flex items-center gap-2 justify-end pt-2">
+                <Button variant="outline" onClick={() => setDefaultProjectModalOpen(false)}>Cancel</Button>
+                <Button onClick={saveDefaultProject}>Save</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Global Confirm Dialog */}
         <Dialog open={confirmState.open} onOpenChange={(v) => { if (!v) { confirmState.resolve && confirmState.resolve(false); setConfirmState({ open: false, message: '', resolve: null }); } }}>
           <DialogContent>
