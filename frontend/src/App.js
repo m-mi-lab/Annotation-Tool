@@ -954,7 +954,7 @@ const Dashboard = () => {
       setDocAnnotations(res.data || []);
       setSelectedAnnIds([]); setSelectAllAnns(false);
       try { if (user?.role === 'admin') { const usersRes = await axios.get(`${API}/admin/users`); const map = {}; (usersRes.data || []).forEach(u => { map[u.id] = u.full_name || u.email; }); setUserMap(map); } } catch {}
-    } catch (e) { alert('Error loading annotations: ' + (e.response?.data?.detail || 'Please try again.')); }
+    } catch (e) { showToast('Error loading annotations: ' + (e.response?.data?.detail || 'Please try again.'), 'error'); }
   };
   const toggleSelectAllAnns = () => { if (selectAllAnns) { setSelectedAnnIds([]); setSelectAllAnns(false); } else { setSelectedAnnIds(docAnnotations.map(a => a.id)); setSelectAllAnns(true); } };
   const toggleAnnChecked = (id) => { setSelectedAnnIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]); };
