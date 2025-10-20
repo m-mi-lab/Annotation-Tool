@@ -865,6 +865,129 @@ async def download_annotated_paragraphs(document_id: str, current_user: User = D
     return StreamingResponse(io.BytesIO(out.getvalue().encode()), media_type='text/csv', headers={"Content-Disposition": f"attachment; filename=annotated_paragraphs_{doc['filename']}"})
 
 # ========================
+# Per-User Download Endpoints (Annotators)
+# ========================
+@api_router.get("/download/my-annotations-csv/{document_id}")
+async def download_my_annotations_csv(document_id: str, current_user: User = Depends(get_current_user)):
+    """Download annotator's own annotations for a document in inline CSV format"""
+    document = await db.documents.find_one({"id": document_id})
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Get all sentences for this document
+    sentences = await db.sentences.find({"document_id": document_id}, {"_id": 0}).sort([("row_index",1),("sentence_index",1)]).to_list(100000)
+    sentence_map = {s["id"]: s for s in sentences}
+    
+    # Get user display name
+    user_display = current_user.full_name or current_user.email or current_user.id
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["document_id","sentence_id","subject_id","row_index","sentence_index","sentence_text","tag_domain","tag_category","tag","valence","notes","is_skipped","confidence","duration_ms"]) 
+    
+    # For each sentence, get only current user's annotations
+    for sid, s in sentence_map.items():
+        anns = await db.annotations.find({"sentence_id": sid, "user_id": current_user.id}, {"_id": 0}).to_list(1000)
+        if not anns:
+            # No annotation by this user for this sentence - empty row
+            writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), "","","","","", False,"",""])
+            continue
+        
+        for a in anns:
+            confidence = a.get("confidence", "")
+            duration_ms = a.get("duration_ms", "")
+            if a.get("skipped"):
+                writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), "","","","", a.get("notes",""), True, confidence, duration_ms])
+                continue
+            
+            tags = a.get("tags", [])
+            if isinstance(tags, list) and tags:
+                for t in tags:
+                    domain = t.get("domain") if isinstance(t, dict) else getattr(t, "domain", "")
+                    category = t.get("category") if isinstance(t, dict) else getattr(t, "category", "")
+                    tag = t.get("tag") if isinstance(t, dict) else getattr(t, "tag", "")
+                    valence = t.get("valence") if isinstance(t, dict) else getattr(t, "valence", "")
+                    writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), domain, category, tag, valence, a.get("notes",""), False, confidence, duration_ms])
+            else:
+                writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), "","","","", a.get("notes",""), False, confidence, duration_ms])
+    
+    output.seek(0)
+    filename = f"my_annotations_{current_user.email.split('@')[0]}_{document.get('filename', 'export')}.csv"
+    return StreamingResponse(io.BytesIO(output.getvalue().encode()), media_type="text/csv", headers={"Content-Disposition": f"attachment; filename={filename}"})
+
+@api_router.get("/download/my-annotated-paragraphs/{document_id}")
+async def download_my_annotated_paragraphs(document_id: str, current_user: User = Depends(get_current_user)):
+    """Download annotator's own annotations reconstructed as paragraphs"""
+    doc = await db.documents.find_one({"id": document_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Fetch sentences ordered by original row/sentence order
+    sents = await db.sentences.find({"document_id": document_id}, {"_id": 0}).sort([("row_index",1),("sentence_index",1)]).to_list(100000)
+    if not sents:
+        raise HTTPException(status_code=404, detail="No sentences for document")
+    
+    ids = [s['id'] for s in sents]
+    # Fetch only current user's annotations
+    anns = await db.annotations.find({"sentence_id": {"$in": ids}, "user_id": current_user.id}, {"_id": 0}).to_list(200000)
+    
+    by_sid: Dict[str, List[Dict[str, Any]]] = {}
+    for a in anns:
+        by_sid.setdefault(a['sentence_id'], []).append(a)
+    
+    # User display name
+    user_display = current_user.full_name or current_user.email or current_user.id
+    
+    # Helper: format tags for a sentence (exclude skipped)
+    def format_sentence_tags(sent_id: str) -> str:
+        arr = []
+        for a in by_sid.get(sent_id, []):
+            if a.get('skipped'):
+                continue
+            tags = a.get('tags', [])
+            if isinstance(tags, list):
+                for t in tags:
+                    if isinstance(t, dict):
+                        domain = (t.get('domain') or '').strip()
+                        category = (t.get('category') or '').strip()
+                        tag = (t.get('tag') or '').strip()
+                        val = (t.get('valence') or '').strip().lower()
+                    else:
+                        domain = (getattr(t, 'domain', '') or '').strip()
+                        category = (getattr(t, 'category', '') or '').strip()
+                        tag = (getattr(t, 'tag', '') or '').strip()
+                        val = (getattr(t, 'valence', '') or '').strip().lower()
+                    if not domain and not category and not tag:
+                        continue
+                    sign = '+' if val == 'positive' else '-'
+                    arr.append(f"{domain}:{category}:{tag}({sign})@{user_display}")
+        if not arr:
+            return ''
+        return f" [Tags: {', '.join(arr)}]"
+    
+    # Group sentences back to paragraphs per row_index
+    para_map: Dict[int, Dict[str, Any]] = {}
+    for s in sents:
+        ri = int(s.get('row_index') or 0)
+        if ri not in para_map:
+            para_map[ri] = {'subject_id': s.get('subject_id', ''), 'parts': []}
+        para_map[ri]['parts'].append(s.get('text','') + format_sentence_tags(s['id']))
+    
+    # Build CSV
+    out = io.StringIO()
+    w = csv.writer(out)
+    w.writerow(["row_index","subject_id","annotated_paragraph_text"]) 
+    for ri in sorted(para_map.keys()):
+        subj = para_map[ri]['subject_id']
+        paragraph = ' '.join(para_map[ri]['parts']).strip()
+        w.writerow([ri, subj, paragraph])
+    
+    out.seek(0)
+    filename = f"my_paragraphs_{current_user.email.split('@')[0]}_{doc.get('filename', 'export')}"
+    return StreamingResponse(io.BytesIO(out.getvalue().encode()), media_type='text/csv', headers={"Content-Disposition": f"attachment; filename={filename}"})
+
+
+# ========================
 # Analytics (partial)
 # ========================
 @api_router.get("/admin/analytics/users")
