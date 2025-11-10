@@ -1246,6 +1246,42 @@ agent_communication:
   - agent: "testing"
     message: "Initial test structure created. Starting comprehensive backend API testing for all endpoints including auth, documents, annotations, and admin functionality."
   - agent: "testing"
+    message: |
+      ✅ COMPREHENSIVE UI IMPROVEMENTS RE-TESTING COMPLETED - All new features working perfectly after /api/activities endpoint fix:
+      
+      COMPLETE ANNOTATION WORKFLOW WITH NEW FEATURES:
+      ✅ Admin login successful (admin@sdoh.com / admin123)
+      ✅ Annotation interface loads without any errors
+      ✅ Tag selection by clicking "+" button (e.g., Economic Stability > Employed +) working
+      ✅ Tag appears in "Selected Tags" section with bright green background
+      ✅ Tag shows both "+" and "-" buttons (Plus and Minus icons)
+      ✅ Confidence slider appears below selected tags
+      ✅ Confidence slider ranges from 0-5 with proper labels ("Not confident" to "Completely confident")
+      ✅ Default confidence value is 3
+      ✅ Clicking "-" button turns tag box bright red
+      ✅ Confidence slider value updates correctly when moved
+      ✅ "Save" button saves annotation successfully with confidence value
+      
+      ACTIVITY LOGGING VERIFICATION:
+      ✅ Various actions performed: select tags, navigate sentences, skip sentences
+      ✅ User Activity Log section found in Admin tab
+      ✅ "Download Activity Log" button present and functional
+      ✅ CSV download functionality working (contains required columns: timestamp, user_id, user_name, document_id, sentence_id, action_type, metadata)
+      ✅ Different action_types logged: page_navigation, tag_click, sentence_transition
+      
+      DOCUMENT TIMESTAMPS:
+      ✅ Documents tab shows upload timestamps (e.g., "Uploaded 8/18/2025", "Uploaded 8/22/2025", "Uploaded 10/20/2025")
+      ✅ Documents show "Last edited" timestamps when available (e.g., "Last edited: 11/10/2025 10:26 AM (User: da2582)")
+      
+      FULL UI VALIDATION:
+      ✅ Green selected tag with + button highlighted - confirmed
+      ✅ Red selected tag with - button highlighted - confirmed  
+      ✅ Confidence slider with all labels visible - confirmed
+      ✅ Activity log CSV with actual data - confirmed
+      ✅ Document list with timestamps - confirmed
+      
+      ALL REQUESTED FEATURES ARE WORKING PERFECTLY! The /api/activities endpoint fix resolved all previous issues.
+  - agent: "testing"
     message: "✅ BACKEND TESTING UPDATE - New Projects analytics endpoints verified: /api/analytics/projects and /api/analytics/projects-chart (PNG) working with authentication and correct data integrity (stacked chart completed vs remaining logic). Regression tests on /api/analytics/enhanced, tag-prevalence-chart, and valence-chart passed. Ready for frontend UI tests."
   - agent: "testing"
     message: "✅ REGRESSION TESTING COMPLETED - All 24 regression tests passed successfully. Specific verification completed for: 1) CSV upload with note_id/text columns storing subject_id in sentences, 2) /api/analytics/enhanced returning per_user, sentences_left_overall, irr_pairs, 3) /api/messages RBAC (list/post/delete with proper permissions), 4) /api/auth/change-password updating hash and blocking invalid current passwords, 5) /api/auth/me/profile updating full_name, 6) All existing endpoints (overview, tag-prevalence, documents, annotations, bulk delete) still working. No failures detected in regression check."
