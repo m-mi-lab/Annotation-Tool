@@ -414,7 +414,8 @@ async def upload_document(
         'description': description,
         'total_sentences': len(sentences),
         'uploaded_by': current_user.id,
-        'created_at': datetime.utcnow().isoformat()
+        'created_at': datetime.utcnow().isoformat(),
+        'last_modified_by': {}  # Will store {user_id: timestamp} for per-user tracking
     }
 
     for s in sentences:
