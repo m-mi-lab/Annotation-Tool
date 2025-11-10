@@ -1009,7 +1009,7 @@ async def download_my_annotated_paragraphs(document_id: str, current_user: User 
                         category = (getattr(t, 'category', '') or '').strip()
                         tag = (getattr(t, 'tag', '') or '').strip()
                         val = (getattr(t, 'valence', '') or '').strip().lower()
-                    if not domain and not category and not tag:
+                    if not domain or not tag:
                         continue
                     sign = '+' if val == 'positive' else '-'
                     arr.append(f"{domain}:{category}:{tag}({sign})@{user_display}")
