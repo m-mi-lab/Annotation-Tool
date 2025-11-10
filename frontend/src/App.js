@@ -350,6 +350,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
   const { user } = useAuth();
   const [selectedTags, setSelectedTags] = useState([]);
   const [notes, setNotes] = useState("");
+  const [confidence, setConfidence] = useState(3);
   const [selectedAnnIds, setSelectedAnnIds] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [toast, setToast] = useState(null);
