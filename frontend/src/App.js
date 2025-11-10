@@ -359,6 +359,39 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
     setTimeout(() => setToast(null), 1600);
   };
 
+  // Activity tracking helper
+  const logActivity = async (actionType, metadata = {}) => {
+    try {
+      const currentSentence = sentences[currentIndex];
+      await axios.post(`${API}/activities`, {
+        document_id: documentId,
+        sentence_id: currentSentence?.id || null,
+        action_type: actionType,
+        metadata: metadata
+      });
+    } catch (e) {
+      // Silent fail - don't interrupt user flow
+      console.error('Failed to log activity:', e);
+    }
+  };
+
+  // Log page navigation when document is first opened
+  useEffect(() => {
+    if (documentId) {
+      logActivity('page_navigation', { document_name: currentDocName });
+    }
+  }, [documentId]);
+
+  // Log sentence transitions
+  useEffect(() => {
+    if (currentIndex >= 0 && sentences[currentIndex]) {
+      logActivity('sentence_transition', { 
+        sentence_index: currentIndex,
+        sentence_id: sentences[currentIndex].id
+      });
+    }
+  }, [currentIndex]);
+
   // Quick shortcuts: flatten first 9 tags for 1-9 keyboard mapping
   const quickTags = React.useMemo(() => {
     const arr = [];
