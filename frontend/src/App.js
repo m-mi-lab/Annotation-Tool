@@ -1261,7 +1261,18 @@ const Dashboard = () => {
                         <h3 className="font-medium">{doc.filename}</h3>
                         {doc.project_name && (<Badge variant="outline">{doc.project_name}</Badge>)}
                       </div>
-                      <p className="text-sm text-gray-600">{doc.total_sentences} sentences • Uploaded {new Date(doc.upload_date || doc.created_at).toLocaleDateString()}</p>
+                      <p className="text-sm text-gray-600">
+                        {doc.total_sentences} sentences • Uploaded {new Date(doc.upload_date || doc.created_at).toLocaleDateString()}
+                      </p>
+                      {doc.last_modified_by && Object.keys(doc.last_modified_by).length > 0 && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Last edited: {Object.entries(doc.last_modified_by || {}).map(([userId, timestamp]) => {
+                            const date = new Date(timestamp).toLocaleDateString();
+                            const time = new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                            return `${date} ${time} (User: ${userId.slice(-6)})`;
+                          }).join(', ')}
+                        </p>
+                      )}
                       {doc.description && (<p className="text-xs text-gray-500 mt-1">{doc.description}</p>)}
                     </div>
                     <div className="flex items-center space-x-2">
