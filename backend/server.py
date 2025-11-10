@@ -200,6 +200,16 @@ class Annotation(BaseModel):
     duration_ms: Optional[int] = None  # time spent selecting tags for this sentence in ms
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
+class UserActivity(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    document_id: Optional[str] = None
+    sentence_id: Optional[str] = None
+    action_type: str  # page_navigation, tag_click, sentence_transition
+    timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    metadata: Optional[Dict[str, Any]] = {}  # Additional context like tag clicked, direction moved, etc.
+
+
 # ========================
 # Auth helpers
 # ========================
