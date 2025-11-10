@@ -585,6 +585,59 @@ async def get_active_docs(scope: str = Query("me"), current_user: User = Depends
 
 
 # ========================
+# User Activity Tracking
+# ========================
+@api_router.post("/activities")
+async def log_activity(activity: UserActivity, current_user: User = Depends(get_current_user)):
+    """Log user activity for timestamp tracking"""
+    activity.user_id = current_user.id  # Always use authenticated user's ID
+    await db.user_activities.insert_one(activity.dict())
+    return {"status": "logged"}
+
+@api_router.get("/admin/download/activity-log")
+async def download_activity_log(
+    document_id: Optional[str] = Query(None),
+    user_id: Optional[str] = Query(None),
+    current_user: User = Depends(get_admin_user)
+):
+    """Download activity log as CSV (admin only)"""
+    query: Dict[str, Any] = {}
+    if document_id:
+        query['document_id'] = document_id
+    if user_id:
+        query['user_id'] = user_id
+    
+    activities = await db.user_activities.find(query, {"_id": 0}).sort("timestamp", -1).to_list(100000)
+    
+    # Get user display names
+    user_ids = list(set(a.get('user_id') for a in activities if a.get('user_id')))
+    users = await db.users.find({"id": {"$in": user_ids}}, {"_id": 0}).to_list(1000)
+    user_display = {u['id']: (u.get('full_name') or u.get('email') or u['id']) for u in users}
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["timestamp", "user_id", "user_name", "document_id", "sentence_id", "action_type", "metadata"])
+    
+    for a in activities:
+        writer.writerow([
+            a.get('timestamp', ''),
+            a.get('user_id', ''),
+            user_display.get(a.get('user_id', ''), ''),
+            a.get('document_id', ''),
+            a.get('sentence_id', ''),
+            a.get('action_type', ''),
+            json.dumps(a.get('metadata', {}))
+        ])
+    
+    output.seek(0)
+    return StreamingResponse(
+        io.BytesIO(output.getvalue().encode()),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=activity_log.csv"}
+    )
+
+
+# ========================
 # Admin endpoints
 # ========================
 
