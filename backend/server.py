@@ -209,6 +209,12 @@ class UserActivity(BaseModel):
     timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     metadata: Optional[Dict[str, Any]] = {}  # Additional context like tag clicked, direction moved, etc.
 
+class UserActivityCreate(BaseModel):
+    document_id: Optional[str] = None
+    sentence_id: Optional[str] = None
+    action_type: str
+    metadata: Optional[Dict[str, Any]] = {}
+
 
 # ========================
 # Auth helpers
