@@ -631,7 +631,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
           )}
 
           {selectedTags.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-gray-900">Selected Tags</h4>
                 <div className="flex items-center gap-2">
@@ -641,18 +641,49 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
               </div>
               <div className="space-y-2">
                 {selectedTags.map((tag, index) => (
-                  <div key={index} className={`flex items-center space-x-2 p-2 rounded border ${tag.valence === 'positive' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                    <span className={`text-xs px-2 py-0.5 rounded ${tag.valence === 'positive' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{tag.domain}: {tag.category} - {tag.tag}</span>
-                    <Select value={tag.valence} onValueChange={(value) => updateTagValence(index, value)}>
-                      <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="positive">Positive</SelectItem>
-                        <SelectItem value="negative">Negative</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button size="sm" variant="ghost" onClick={() => removeTag(index)}><X className="h-4 w-4" /></Button>
+                  <div key={index} className={`flex items-center justify-between p-3 rounded-lg border-2 transition-colors ${tag.valence === 'positive' ? 'bg-green-500 border-green-600 text-white' : 'bg-red-500 border-red-600 text-white'}`}>
+                    <span className="text-sm font-medium">{tag.domain}: {tag.category} - {tag.tag}</span>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        size="sm" 
+                        variant={tag.valence === 'positive' ? 'secondary' : 'ghost'}
+                        onClick={() => updateTagValence(index, 'positive')}
+                        className={`h-8 w-8 p-0 ${tag.valence === 'positive' ? 'bg-white text-green-600' : 'bg-green-600 text-white hover:bg-green-700'}`}
+                        title="Positive valence"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant={tag.valence === 'negative' ? 'secondary' : 'ghost'}
+                        onClick={() => updateTagValence(index, 'negative')}
+                        className={`h-8 w-8 p-0 ${tag.valence === 'negative' ? 'bg-white text-red-600' : 'bg-red-600 text-white hover:bg-red-700'}`}
+                        title="Negative valence"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => removeTag(index)} className="h-8 w-8 p-0 text-white hover:bg-white/20" title="Remove tag">
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
+              </div>
+              <div className="space-y-2 p-3 bg-gray-50 rounded-lg">
+                <Label className="text-sm font-medium">Confidence Level</Label>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-gray-600 min-w-[120px]">Not confident</span>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="5" 
+                    value={confidence}
+                    onChange={(e) => setConfidence(parseInt(e.target.value))}
+                    className="flex-1 h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <span className="text-xs text-gray-600 min-w-[120px] text-right">Completely confident</span>
+                  <span className="text-lg font-bold text-blue-600 min-w-[30px]">{confidence}</span>
+                </div>
               </div>
             </div>
           )}
