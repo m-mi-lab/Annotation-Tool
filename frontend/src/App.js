@@ -994,8 +994,15 @@ const Dashboard = () => {
     catch (e) { showToast('Error bulk-deleting annotations: ' + (e.response?.data?.detail || 'Please try again.'), 'error'); }
   };
 
-  const createAnnotation = async (sentenceId, tags, notes, skipped = false) => {
-    try { await axios.post(`${API}/annotations`, { sentence_id: sentenceId, tags, notes, skipped }); await refreshSentenceAnnotations(sentenceId); fetchAnalytics(); }
+  const createAnnotation = async (sentenceId, tags, notes, skipped = false, confidence = null, duration_ms = null) => {
+    try { 
+      const payload = { sentence_id: sentenceId, tags, notes, skipped };
+      if (confidence !== null) payload.confidence = confidence;
+      if (duration_ms !== null) payload.duration_ms = duration_ms;
+      await axios.post(`${API}/annotations`, payload); 
+      await refreshSentenceAnnotations(sentenceId); 
+      fetchAnalytics(); 
+    }
     catch (e) { showToast('Error saving annotation: ' + (e.response?.data?.detail || 'Please try again.'), 'error'); }
   };
 
