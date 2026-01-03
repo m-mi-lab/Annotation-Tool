@@ -1343,15 +1343,18 @@ frontend:
 
   - task: "Document User Assignment Feature"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "New user assignment feature for documents needs comprehensive testing. Should verify removal of old project management buttons, presence of 'Assign Users' buttons, modal functionality, user selection, assignment persistence, and independent assignments per document."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED - Document user assignment feature fully functional and meets all requirements from review request. VERIFIED: 1) ✅ Admin login successful (admin@sdoh.com / admin123), 2) ✅ Documents tab accessible with 3 documents, 3) ✅ 'Set Default Project' button NOT present (correctly removed), 4) ✅ 'Reassign all to default' button NOT present (correctly removed), 5) ✅ Found 3 'Assign Users' buttons with user icons, 6) ✅ Modal opens with correct title 'Assign Users to Document', 7) ✅ Modal shows document filename (e.g., test_discharge_summaries.csv), 8) ✅ Modal displays list of users with checkboxes (10+ users available), 9) ✅ Backend API /api/admin/documents/{id}/assign-users working correctly, 10) ✅ User assignment persistence verified - assigned users display as 'Assigned users: Rachel Polcyn, Analytics Test User 055010', 11) ✅ Modal reopens for modification with previously selected users pre-checked, 12) ✅ Multiple documents have independent assignment functionality, 13) ✅ Second document modal opens independently with different filename. IMPLEMENTATION VERIFIED: Frontend modal (lines 1602-1645), backend endpoint working, assigned_users display (lines 1336-1343), user filtering (annotators only). All test requirements from review request successfully completed."
 
 metadata:
   created_by: "testing_agent"
