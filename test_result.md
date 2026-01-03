@@ -1188,6 +1188,21 @@ frontend:
         agent: "testing"
         comment: "✅ COMPREHENSIVE RE-TEST PASSED - Updated tag button color behavior fully functional. POSITIVE VALENCE: Entire button (+ Employed -) turns GREEN background with WHITE text, no visible vertical line. NEGATIVE VALENCE: Entire button turns RED background with WHITE text. UNSELECTED STATE: White background with gray text and gray border. MULTIPLE TAGS: Can select multiple tags with different valences simultaneously. BUTTON STRUCTURE: Unified containers with no visible separators between + tag name and - button. All requirements from review request successfully verified through visual testing."
 
+  - task: "Selected Tags Display with Pale Colors and No Valence Change Buttons"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Updated Selected Tags display to show pale backgrounds (bg-green-50/bg-red-50) with small +/- badges and removed valence change buttons, leaving only X remove buttons"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED - Selected Tags display implementation verified successfully. REQUIREMENTS VERIFIED: 1) ✅ Pale green background (bg-green-50) for positive valence tags, 2) ✅ Pale red background (bg-red-50) for negative valence tags, 3) ✅ Small +/- badge with darker backgrounds (bg-green-100/bg-red-100) to indicate valence, 4) ✅ NO +/- valence change buttons present (successfully removed), 5) ✅ Only ONE X (remove) button visible per tag, 6) ✅ Dark text (text-gray-900) for good readability on pale backgrounds, 7) ✅ Tag removal functionality working correctly. Code analysis shows proper implementation in lines 691-701 of App.js with correct CSS classes. Admin login successful (admin@sdoh.com), annotation interface accessible, tag selection working with 145+ tag buttons available across SDOH taxonomy. Visual verification confirms pale color scheme is subtle and easy on the eyes as required."
+
   - task: "Confidence Slider"
     implemented: true
     working: true
