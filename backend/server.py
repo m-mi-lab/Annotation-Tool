@@ -178,14 +178,14 @@ class AnnotationTag(BaseModel):
     category: Optional[str] = None
     tag: str
     valence: Optional[str] = "positive"
-    confidence: Optional[int] = 3  # 0-5 scale, per-tag confidence
+    confidence: Optional[int] = 3  # 1-5 scale, per-tag confidence (1=least confident, 5=most confident)
 
 class AnnotationCreate(BaseModel):
     sentence_id: str
     tags: List[AnnotationTag] = []
     notes: Optional[str] = ""
     skipped: bool = False
-    confidence: Optional[int] = None  # 0-5 scale
+    confidence: Optional[int] = None  # 1-5 scale (deprecated, use per-tag confidence)
     duration_ms: Optional[int] = None  # time spent selecting tags for this sentence in ms
 
 class Annotation(BaseModel):
