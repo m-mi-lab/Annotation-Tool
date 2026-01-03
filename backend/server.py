@@ -1486,6 +1486,30 @@ async def download_resource(resource_id: str, current_user: Optional[User] = Dep
         "Content-Disposition": f"inline; filename={meta['filename']}"
     })
 
+
+@api_router.delete("/admin/resources/{resource_id}")
+async def delete_resource(resource_id: str, current_user: User = Depends(get_admin_user)):
+    """Delete a resource (admin only)"""
+    try:
+        oid = ObjectId(resource_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid resource ID")
+    
+    # Delete from GridFS
+    try:
+        await fs_bucket.delete(oid)
+    except Exception as e:
+        # If not found in GridFS, continue to delete metadata
+        pass
+    
+    # Delete metadata
+    result = await db.resources_meta.delete_one({"id": resource_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Resource not found")
+    
+    return {"message": "Resource deleted successfully"}
+
+
 app.include_router(api_router)
 
 @api_router.get("/admin/settings/default-project")
