@@ -1006,6 +1006,9 @@ const Dashboard = () => {
   const fetchDocuments = async () => {
     try { const res = await axios.get(`${API}/documents`); setDocuments(res.data); setSelectedDocIds([]); setSelectAllDocs(false); } catch {}
   };
+  const fetchUsers = async () => {
+    try { const res = await axios.get(`${API}/admin/users`); setUsers(res.data || []); } catch {}
+  };
   const fetchAnalytics = async () => { try { const res = await axios.get(`${API}/analytics/overview`); setAnalytics(res.data); } catch {} };
   const fetchEnhancedAnalytics = async () => { try { const res = await axios.get(`${API}/analytics/enhanced`); setEnhancedAnalytics(res.data || { per_user: [], sentences_left_overall: 0, irr_pairs: [] }); } catch {} };
   const fetchProjects = async () => { try { const res = await axios.get(`${API}/analytics/projects`); setProjects(res.data || []); } catch {} };
