@@ -478,7 +478,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
           const cp = [...prev]; cp[idx] = { ...cp[idx], valence }; return cp;
         }
       } else {
-        return [...prev, { domain, category, tag, valence }];
+        return [...prev, { domain, category, tag, valence, confidence: 3 }];
       }
     });
   };
