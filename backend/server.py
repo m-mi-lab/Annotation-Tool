@@ -1357,15 +1357,20 @@ async def upload_resource(file: UploadFile = File(...), current_user: User = Dep
     if ext not in ALLOWED_RESOURCE_EXT:
         raise HTTPException(status_code=400, detail=f"Unsupported file type: .{ext}")
     data = await file.read()
-    grid_in = await fs_bucket.open_upload_stream(file.filename, metadata={
-        'uploaded_by': current_user.id,
-        'content_type': file.content_type or 'application/octet-stream',
-        'size': len(data),
-        'kind': 'file'
-    })
-    await grid_in.write(data)
-    await grid_in.close()
-    rid = str(grid_in._id)
+    
+    # Upload to GridFS
+    file_id = await fs_bucket.upload_from_stream(
+        file.filename,
+        data,
+        metadata={
+            'uploaded_by': current_user.id,
+            'content_type': file.content_type or 'application/octet-stream',
+            'size': len(data),
+            'kind': 'file'
+        }
+    )
+    
+    rid = str(file_id)
     await db.resources_meta.insert_one({
         'id': rid,
         'filename': file.filename,
