@@ -1341,6 +1341,18 @@ frontend:
         agent: "testing"
         comment: "✅ COMPREHENSIVE TESTING COMPLETED - Per-tag confidence sliders fully functional and meeting all requirements. VERIFIED: 1) ✅ Each selected tag has its OWN individual confidence slider (found 2 sliders for 2 selected tags), 2) ✅ Each slider shows 'Confidence:' label and current value display, 3) ✅ Each slider has correct range (0-5) and defaults to 3, 4) ✅ Sliders are completely independent - successfully set first tag confidence to 5 and second tag confidence to 1, 5) ✅ Mixed positive/negative valences working (Employed positive, Unemployed positive), 6) ✅ No global confidence slider present - correct behavior, 7) ✅ Save functionality available and working, 8) ✅ Visual verification via screenshot shows proper implementation with individual sliders below each selected tag. Implementation in lines 710-721 of App.js with updateTagConfidence function (lines 461-467) working perfectly. All test requirements from review request successfully completed."
 
+  - task: "Document User Assignment Feature"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "New user assignment feature for documents needs comprehensive testing. Should verify removal of old project management buttons, presence of 'Assign Users' buttons, modal functionality, user selection, assignment persistence, and independent assignments per document."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
