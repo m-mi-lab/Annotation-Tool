@@ -750,16 +750,34 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                     <div key={category} className="space-y-1">
                       <h6 className="text-xs font-medium text-gray-600">{category}</h6>
                       <div className="flex flex-wrap gap-1">
-                        {tags.map((tag) => (
-                          <div key={tag} className="inline-flex">
-                            <Button size="sm" variant={isSelectedTag(domain, category, tag) ? "default" : "outline"} onClick={() => selectTagWithValence(domain, category, tag, 'positive')} className="text-xs h-6 px-2 rounded-r-none">
-                              <Plus className="h-3 w-3 mr-1" /> {tag}
-                            </Button>
-                            <Button size="sm" variant={isSelectedTag(domain, category, tag) ? "destructive" : "outline"} onClick={() => selectTagWithValence(domain, category, tag, 'negative')} className="text-xs h-6 px-2 rounded-l-none border-l-0">
-                              <Minus className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
+                        {tags.map((tag) => {
+                          const valence = getTagValence(domain, category, tag);
+                          const isPositive = valence === 'positive';
+                          const isNegative = valence === 'negative';
+                          const baseClasses = isPositive ? 'bg-green-600 text-white hover:bg-green-700 border-green-600' : 
+                                             isNegative ? 'bg-red-600 text-white hover:bg-red-700 border-red-600' : 
+                                             'bg-white text-gray-700 hover:bg-gray-50 border-gray-300';
+                          return (
+                            <div key={tag} className={`inline-flex rounded border ${baseClasses}`}>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => selectTagWithValence(domain, category, tag, 'positive')} 
+                                className={`text-xs h-6 px-2 rounded-r-none hover:bg-transparent ${isPositive ? 'text-white' : isNegative ? 'text-white' : 'text-gray-700'}`}
+                              >
+                                <Plus className="h-3 w-3 mr-1" /> {tag}
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => selectTagWithValence(domain, category, tag, 'negative')} 
+                                className={`text-xs h-6 px-2 rounded-l-none hover:bg-transparent border-l-0 ${isPositive ? 'text-white' : isNegative ? 'text-white' : 'text-gray-700'}`}
+                              >
+                                <Minus className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   ))}
