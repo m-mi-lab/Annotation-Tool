@@ -178,6 +178,7 @@ class AnnotationTag(BaseModel):
     category: Optional[str] = None
     tag: str
     valence: Optional[str] = "positive"
+    confidence: Optional[int] = 3  # 0-5 scale, per-tag confidence
 
 class AnnotationCreate(BaseModel):
     sentence_id: str
