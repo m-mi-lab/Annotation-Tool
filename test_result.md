@@ -1226,6 +1226,21 @@ backend:
         agent: "testing"
         comment: "✅ PASSED - /api/auth/me/profile endpoint working correctly. Updates full_name field in user profile and returns updated user object. Proper authentication required."
 
+  - task: "Resource Upload and Download"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Fixed GridFS upload to use upload_from_stream instead of deprecated open_upload_stream. Fixed GridFS download to use download_to_stream instead of deprecated open_download_stream. Previous error: TypeError: object AsyncIOMotorGridIn can't be used in 'await' expression"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED - Resource upload/download functionality fully working after GridFS API fixes. UPLOAD TESTS: ✅ PDF upload successful (POST /api/admin/resources/upload) with proper file ID response, ✅ Image upload successful with proper file ID response, ✅ File metadata correctly saved to resources_meta collection, ✅ Admin-only access properly enforced (403 for non-admin users). DOWNLOAD TESTS: ✅ PDF download successful (GET /api/resources/{id}/download) with content matching uploaded file, ✅ Image download successful with content matching uploaded file, ✅ Proper content-type headers returned. ERROR HANDLING: ✅ Unsupported file types properly rejected with 400 error, ✅ Missing file parameter properly rejected with 422 error, ✅ Unauthorized access properly rejected with 403 error. METADATA STORAGE: ✅ All uploaded resources appear in /api/resources endpoint with correct metadata. All 9/9 tests passed. The GridFS upload_from_stream and download_to_stream methods are working correctly, resolving the previous AsyncIOMotorGridIn await expression error."
+
 frontend:
   - task: "Tag Valence UI Changes"
     implemented: true
