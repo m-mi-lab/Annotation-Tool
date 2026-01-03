@@ -994,7 +994,7 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchDocuments(); fetchAnalytics(); fetchEnhancedAnalytics(); fetchTagStructure(); fetchResources(); fetchProjects();
+    fetchDocuments(); fetchAnalytics(); fetchEnhancedAnalytics(); fetchTagStructure(); fetchResources(); fetchProjects(); fetchUsers();
     const t = localStorage.getItem('token');
     if (t) {
       setProjectsChartUrl(`${API}/analytics/projects-chart?token=${encodeURIComponent(t)}`);
