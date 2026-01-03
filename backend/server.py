@@ -1506,6 +1506,61 @@ async def delete_resource(resource_id: str, current_user: User = Depends(get_adm
     # Delete metadata
     result = await db.resources_meta.delete_one({"id": resource_id})
     if result.deleted_count == 0:
+
+
+@api_router.get("/resources/{resource_id}/preview")
+async def preview_resource(resource_id: str, current_user: User = Depends(get_current_user)):
+    """Get HTML preview of a Word document"""
+    try:
+        oid = ObjectId(resource_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid resource ID")
+    
+    meta = await db.resources_meta.find_one({"id": resource_id}, {"_id": 0})
+    if not meta:
+        raise HTTPException(status_code=404, detail="Not found")
+    
+    # Check if it's a Word document
+    content_type = meta.get('content_type', '')
+    if 'word' not in content_type.lower() and not meta['filename'].endswith(('.doc', '.docx')):
+        raise HTTPException(status_code=400, detail="Preview only available for Word documents")
+    
+    # Download from GridFS
+    buffer = io.BytesIO()
+    await fs_bucket.download_to_stream(oid, buffer)
+    buffer.seek(0)
+    
+    # Convert to HTML using mammoth
+    try:
+        result = mammoth.convert_to_html(buffer)
+        html_content = result.value
+        messages = result.messages
+        
+        # Wrap in basic HTML structure with styling
+        full_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {{ font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }}
+                p {{ margin: 10px 0; }}
+                h1, h2, h3 {{ margin: 15px 0 10px 0; }}
+                table {{ border-collapse: collapse; width: 100%; margin: 15px 0; }}
+                td, th {{ border: 1px solid #ddd; padding: 8px; }}
+                th {{ background-color: #f2f2f2; }}
+            </style>
+        </head>
+        <body>
+            {html_content}
+        </body>
+        </html>
+        """
+        
+        return HTMLResponse(content=full_html)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error converting document: {str(e)}")
+
         raise HTTPException(status_code=404, detail="Resource not found")
     
     return {"message": "Resource deleted successfully"}
