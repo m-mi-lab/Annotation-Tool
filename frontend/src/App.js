@@ -457,6 +457,14 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
   };
 
   const removeTag = (index) => { const n = [...selectedTags]; n.splice(index, 1); setSelectedTags(n); };
+
+  const updateTagConfidence = (index, newConfidence) => {
+    setSelectedTags(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], confidence: newConfidence };
+      return updated;
+    });
+  };
   const updateTagValence = (index, valence) => { const n = [...selectedTags]; n[index].valence = valence; setSelectedTags(n); };
   const selectTagWithValence = (domain, category, tag, valence) => {
     // Log tag click activity
