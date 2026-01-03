@@ -67,26 +67,26 @@ SDOH_DOMAINS = [
 SDOH_TAG_STRUCTURE = {
     "Economic Stability": {
         "Employment": [
-            "Employed", "Under-employed", "Unemployed", "Disabled",
+            "Employed", "Unemployed", "Disabled",
             "Retired", "Homemaker", "Student", "Harmful Workplace"
         ],
         "Food Insecurity": [
-            "Low Food Security", "Very Low Food Security",
+            "Low Food Security",
             "Physical Access Barrier", "Food Assistance Program"
         ],
         "Housing Instability": [
-            "Cost-Burdened Household", "Overcrowding", "Multiple Moves",
-            "Eviction or Foreclosure", "Substandard Housing", "Unhoused",
+            "Overcrowding", "Multiple Moves",
+            "Eviction or Foreclosure", "Unhoused",
             "Housing Assistance Program"
         ],
         "Poverty": [
-            "Below Poverty Threshold", "Low Socioeconomic Status",
+            "Low Socioeconomic Status",
             "Social Assistance Program"
         ]
     },
     "Education Access and Quality": {
         "Early Childhood Development and Education": [
-            "Early Learning Programs", "School Readiness Concern", "Developmental Delay",
+            "School Readiness Concern", "Developmental Delay",
             "Reading Impairment", "Math Impairment", "Other Learning Disability",
             "Early Intervention Services", "Learning Environment Concern"
         ],
@@ -96,7 +96,7 @@ SDOH_TAG_STRUCTURE = {
             "Graduate or Professional Degree"
         ],
         "Language and Literacy": [
-            "Language Barrier", "Low Health Literacy"
+            "Language Barrier"
         ]
     },
     "Health Care Access and Quality": {
@@ -111,13 +111,12 @@ SDOH_TAG_STRUCTURE = {
         "Health Literacy": [
             "Difficulty Understanding Medical Information",
             "Limited Understanding of Preventative Care",
-            "Language Barriers Affecting Comprehension",
             "Digital Health Literacy Gaps"
         ]
     },
     "Neighborhood and Built Environment": {
         "Access to Healthy Foods": [
-            "Distance to Food Sources", "Limited Healthy Food Options",
+            "Limited Healthy Food Options",
             "Food Environment Quality"
         ],
         "Crime and Violence": [
@@ -143,8 +142,7 @@ SDOH_TAG_STRUCTURE = {
             "Community Supervision"
         ],
         "Social Cohesion": [
-            "Supportive Relationships", "Social Isolation",
-            "Trust and Belonging in Community"
+            "Supportive Relationships", "Social Isolation"
         ],
         "Experiences of Discrimination or Exclusion": [
             "Race", "Ethnicity", "Gender", "Sexual Orientation", "Other Identity"
