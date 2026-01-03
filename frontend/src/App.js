@@ -688,33 +688,19 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
               </div>
               <div className="space-y-2">
                 {selectedTags.map((tag, index) => (
-                  <div key={index} className={`flex items-center justify-between p-3 rounded-lg border-2 transition-colors ${tag.valence === 'positive' ? 'bg-green-500 border-green-600 text-white' : 'bg-red-500 border-red-600 text-white'}`}>
-                    <span className="text-sm font-medium">{tag.domain}: {tag.category} - {tag.tag}</span>
+                  <div key={index} className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${tag.valence === 'positive' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                     <div className="flex items-center gap-2">
-                      <Button 
-                        size="sm" 
-                        variant={tag.valence === 'positive' ? 'secondary' : 'ghost'}
-                        onClick={() => updateTagValence(index, 'positive')}
-                        className={`h-8 w-8 p-0 ${tag.valence === 'positive' ? 'bg-white text-green-600' : 'bg-green-600 text-white hover:bg-green-700'}`}
-                        title="Positive valence"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant={tag.valence === 'negative' ? 'secondary' : 'ghost'}
-                        onClick={() => updateTagValence(index, 'negative')}
-                        className={`h-8 w-8 p-0 ${tag.valence === 'negative' ? 'bg-white text-red-600' : 'bg-red-600 text-white hover:bg-red-700'}`}
-                        title="Negative valence"
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => removeTag(index)} className="h-8 w-8 p-0 text-white hover:bg-white/20" title="Remove tag">
-                        <X className="h-4 w-4" />
-                      </Button>
+                      <span className={`text-xs px-2 py-1 rounded font-medium ${tag.valence === 'positive' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {tag.valence === 'positive' ? '+' : '-'}
+                      </span>
+                      <span className="text-sm font-medium text-gray-900">{tag.domain}: {tag.category} - {tag.tag}</span>
                     </div>
+                    <Button size="sm" variant="ghost" onClick={() => removeTag(index)} className="h-8 w-8 p-0 hover:bg-gray-100" title="Remove tag">
+                      <X className="h-4 w-4 text-gray-600" />
+                    </Button>
                   </div>
                 ))}
+              </div>
               </div>
               <div className="space-y-2 p-3 bg-gray-50 rounded-lg">
                 <Label className="text-sm font-medium">Confidence Level</Label>
