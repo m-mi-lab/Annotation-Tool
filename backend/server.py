@@ -1478,10 +1478,11 @@ async def download_resource(resource_id: str, current_user: Optional[User] = Dep
         raise HTTPException(status_code=404, detail="Not found")
     
     # Download from GridFS
-    data = await fs_bucket.download_to_stream(oid, io.BytesIO())
-    data.seek(0)
+    buffer = io.BytesIO()
+    await fs_bucket.download_to_stream(oid, buffer)
+    buffer.seek(0)
     
-    return StreamingResponse(data, media_type=meta.get('content_type') or 'application/octet-stream', headers={
+    return StreamingResponse(buffer, media_type=meta.get('content_type') or 'application/octet-stream', headers={
         "Content-Disposition": f"inline; filename={meta['filename']}"
     })
 
