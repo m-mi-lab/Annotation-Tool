@@ -806,6 +806,32 @@ async def delete_document(document_id: str, current_user: User = Depends(get_adm
         "annotations_deleted": annotations_deleted
     }
 
+
+@api_router.post("/admin/documents/{document_id}/assign-users")
+async def assign_users_to_document(document_id: str, request: Dict[str, List[str]], current_user: User = Depends(get_admin_user)):
+    """Assign users to a document (admin only)"""
+    user_ids = request.get('user_ids', [])
+    
+    document = await db.documents.find_one({"id": document_id})
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Validate that all user_ids exist
+    if user_ids:
+        existing_users = await db.users.find({"id": {"$in": user_ids}}, {"_id": 0, "id": 1}).to_list(1000)
+        existing_user_ids = [u['id'] for u in existing_users]
+        invalid_ids = [uid for uid in user_ids if uid not in existing_user_ids]
+        if invalid_ids:
+            raise HTTPException(status_code=400, detail=f"Invalid user IDs: {invalid_ids}")
+    
+    # Update document with assigned users
+    await db.documents.update_one(
+        {"id": document_id},
+        {"$set": {"assigned_users": user_ids}}
+    )
+    
+    return {"message": "Users assigned successfully", "assigned_users": user_ids}
+
 @api_router.post("/admin/documents/bulk-delete")
 async def bulk_delete_documents(request: Dict[str, List[str]], current_user: User = Depends(get_admin_user)):
     """Bulk delete documents and cascade to sentences/annotations (admin only)"""
