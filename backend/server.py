@@ -1536,7 +1536,6 @@ async def preview_resource(resource_id: str, current_user: User = Depends(get_cu
     try:
         result = mammoth.convert_to_html(buffer)
         html_content = result.value
-        messages = result.messages
         
         # Wrap in basic HTML structure with styling
         full_html = f"""
