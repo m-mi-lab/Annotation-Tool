@@ -17,6 +17,8 @@ class SDOHAPITester:
         self.test_document_id = None
         self.test_sentence_id = None
         self.created_user_ids = []  # Track created users for cleanup
+        self.test_word_resource_id = None  # Track uploaded Word document
+        self.test_pdf_resource_id = None   # Track uploaded PDF document
 
     def run_test(self, name, method, endpoint, expected_status, data=None, files=None):
         """Run a single API test"""
