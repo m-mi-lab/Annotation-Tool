@@ -838,7 +838,7 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
@@ -846,6 +846,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ PASSED - User login endpoint working correctly. Validates credentials, returns JWT token with proper expiration. Admin and regular user login both tested successfully."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE LOGIN TESTING COMPLETED - Updated login functionality that accepts both email and username (full_name) tested successfully. ALL 7 TEST REQUIREMENTS PASSED: 1) ✅ Admin login with email (admin@sdoh.com) - returns 200 with access_token, 2) ✅ Admin login with username ('SDOH Administrator') - returns 200 with access_token, 3) ✅ Regular user login with email - returns 200 with access_token, 4) ✅ Regular user login with username (full_name) - returns 200 with access_token, 5) ✅ Invalid username rejection - returns 401 'Invalid credentials', 6) ✅ Invalid password rejection - returns 401 'Invalid credentials', 7) ✅ Input format validation - email field accepts non-email strings without validation errors. UserLogin model correctly changed from EmailStr to str. Login endpoint properly checks email first, then full_name if not found. Field accepts various username formats (simple usernames, usernames with numbers, spaces, special characters) without throwing validation errors. All authentication scenarios working as designed."
 
   - task: "Authentication - Get Current User"
     implemented: true
