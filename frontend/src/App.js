@@ -2076,10 +2076,20 @@ const Home = () => {
 };
 
 function App() {
+  // Apply saved theme on initial load
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-background text-foreground">
           <AuthenticatedApp />
         </div>
       </BrowserRouter>
