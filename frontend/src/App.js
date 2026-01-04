@@ -246,8 +246,8 @@ const AuthForm = () => {
       if (!result.success) {
         setError(result.error);
       } else {
-        // Redirect to dashboard after successful login
-        navigate('/dashboard');
+        // Redirect to home page after successful login
+        window.location.href = '/home';
       }
     } catch {
       setError("Unexpected error");
