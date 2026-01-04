@@ -971,6 +971,31 @@ const AdminManagementPanel = ({ notify = (msg) => window.alert(msg) }) => {
           {toast.message}
         </div>
       )}
+      
+      {/* Confirmation Dialog */}
+      <Dialog open={confirmState.open} onOpenChange={(open) => { 
+        if (!open && confirmState.resolve) { 
+          confirmState.resolve(false); 
+          setConfirmState({ open: false, message: '', resolve: null }); 
+        } 
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Action</DialogTitle>
+            <DialogDescription>{confirmState.message}</DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-2 justify-end pt-2">
+            <Button variant="outline" onClick={() => { 
+              if (confirmState.resolve) confirmState.resolve(false); 
+              setConfirmState({ open: false, message: '', resolve: null }); 
+            }}>Cancel</Button>
+            <Button variant="destructive" onClick={() => { 
+              if (confirmState.resolve) confirmState.resolve(true); 
+              setConfirmState({ open: false, message: '', resolve: null }); 
+            }}>Confirm</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
