@@ -840,7 +840,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
 
           <div className="space-y-4 border-t pt-4">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-gray-900">Add Tags:</h4>
+              <h4 className="font-medium text-foreground">Add Tags:</h4>
               <div className="text-xs text-gray-500">
                 Shortcuts: Enter save • S skip • [/] prev/next • C clear all
               </div>
