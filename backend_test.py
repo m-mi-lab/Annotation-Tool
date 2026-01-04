@@ -2034,6 +2034,14 @@ startxref
         self.test_projects_analytics_endpoint()
         self.test_projects_chart_authentication()
         
+        # === NEW ADMIN ANALYTICS ENDPOINTS TESTS ===
+        print("\n" + "=" * 15 + " NEW ADMIN ANALYTICS ENDPOINTS TESTS " + "=" * 15)
+        self.test_domain_tag_stats_endpoint()
+        self.test_domain_chart_endpoint()
+        self.test_all_documents_user_progress_endpoint()
+        self.test_activity_log_with_user_filter_endpoint()
+        self.test_resource_preview_excel_endpoint()
+        
         # === CLEANUP ===
         print("\n" + "=" * 30 + " CLEANUP " + "=" * 30)
         self.test_admin_delete_created_users()
