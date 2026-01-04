@@ -1728,3 +1728,55 @@ agent_communication:
       - Error handling: Proper HTTP status codes and error messages
       
       ALL 6/6 REQUIREMENTS FROM REVIEW REQUEST SUCCESSFULLY IMPLEMENTED AND TESTED.
+  - agent: "testing"
+    message: |
+      ✅ UPDATED LOGIN FUNCTIONALITY TESTING COMPLETED - Comprehensive testing of login endpoint that accepts both email and username (full_name) completed successfully:
+      
+      TEST REQUIREMENTS VERIFIED (ALL 7 TESTS PASSED):
+      1. ✅ Admin Login with Email (admin@sdoh.com / admin123):
+         - Returns 200 status with access_token and token_type: bearer
+         - JWT token generation working correctly
+      
+      2. ✅ Admin Login with Username ('SDOH Administrator'):
+         - Returns 200 status with access_token and token_type: bearer
+         - Full_name lookup working correctly when email not found
+      
+      3. ✅ Regular User Login with Email:
+         - Created test user (testuser_001245@example.com / TestPass123!)
+         - Returns 200 status with access_token
+         - Email-based authentication working for regular users
+      
+      4. ✅ Regular User Login with Username ('TestUser001245'):
+         - Returns 200 status with access_token
+         - Username-based authentication working for regular users
+      
+      5. ✅ Invalid Username Rejection:
+         - Non-existent username 'NonExistentUser123' returns 401 "Invalid credentials"
+         - Proper error handling for unknown usernames
+      
+      6. ✅ Invalid Password Rejection:
+         - Correct username with wrong password returns 401 "Invalid credentials"
+         - Proper error handling for authentication failures
+      
+      7. ✅ Input Format Validation:
+         - Email field accepts non-email strings without validation errors
+         - Tested formats: 'testuser', 'user123', 'Test User Name', 'test_user-name'
+         - All return 401 "Invalid credentials" (not 422 validation error)
+         - Confirms UserLogin model changed from EmailStr to str successfully
+      
+      IMPLEMENTATION CHANGES VERIFIED:
+      - UserLogin model email field changed from EmailStr to str ✓
+      - Login endpoint checks email first, then full_name if not found ✓
+      - Field comment updated to indicate "email or username" ✓
+      - No validation errors for non-email formats ✓
+      
+      AUTHENTICATION FLOW CONFIRMED:
+      1. POST /api/auth/login attempts to find user by email field
+      2. If not found, attempts to find user by full_name field
+      3. If user found, validates password with bcrypt
+      4. Returns JWT token on successful authentication
+      5. Returns 401 "Invalid credentials" on any failure
+      
+      TEST CLEANUP: Created test user successfully deleted after testing.
+      
+      ALL REQUIREMENTS FROM REVIEW REQUEST SUCCESSFULLY COMPLETED.
