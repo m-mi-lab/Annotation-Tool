@@ -390,7 +390,7 @@ const ActiveDocsPanel = ({ onOpenDoc }) => {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-medium">{it.filename}</div>
-                    <div className="text-xs text-gray-500">{it.annotated_count}/{it.total_sentences} sentences</div>
+                    <div className="text-xs text-muted-foreground">{it.annotated_count}/{it.total_sentences} sentences</div>
                   </div>
                   <div className="w-64">
                     <div className="h-2 bg-gray-200 rounded"><div className="h-2 bg-blue-600 rounded" style={{ width: `${Math.round(it.progress*100)}%` }}></div></div>
@@ -841,7 +841,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
           <div className="space-y-4 border-t pt-4">
             <div className="flex items-center justify-between">
               <h4 className="font-medium text-foreground">Add Tags:</h4>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-muted-foreground">
                 Shortcuts: Enter save • S skip • [/] prev/next • C clear all
               </div>
             </div>
