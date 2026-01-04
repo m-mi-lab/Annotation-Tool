@@ -767,7 +767,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                               </span>
                             ))}
                           </div>
-                          {annotation.notes && (<p className="text-sm text-gray-600">Notes: {annotation.notes}</p>)}
+                          {annotation.notes && (<p className="text-sm text-muted-foreground">Notes: {annotation.notes}</p>)}
                         </div>
                       )}
                     </div>
