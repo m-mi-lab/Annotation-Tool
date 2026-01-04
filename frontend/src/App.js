@@ -874,7 +874,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                                 size="sm" 
                                 variant="ghost" 
                                 onClick={() => selectTagWithValence(domain, category, tag, 'negative')} 
-                                className={`text-xs h-6 px-2 rounded-l-none hover:bg-transparent border-l-0 ${isPositive ? 'text-white' : isNegative ? 'text-white' : 'text-gray-700'}`}
+                                className={`text-xs h-6 px-2 rounded-l-none hover:bg-transparent border-l-0 ${isPositive ? 'text-white' : isNegative ? 'text-white' : 'text-foreground'}`}
                               >
                                 <Minus className="h-3 w-3" />
                               </Button>
