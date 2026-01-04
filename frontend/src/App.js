@@ -404,7 +404,7 @@ const ActiveDocsPanel = ({ onOpenDoc }) => {
                 {it.subjects && it.subjects.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {it.subjects.slice(0, 30).map((sub) => (
-                      <span key={sub} className="px-2 py-1 text-xs rounded bg-gray-100 border">{sub}</span>
+                      <span key={sub} className="px-2 py-1 text-xs rounded bg-muted border">{sub}</span>
                     ))}
                     {it.subjects.length > 30 && <span className="text-xs text-gray-500">+{it.subjects.length - 30} more</span>}
                   </div>
