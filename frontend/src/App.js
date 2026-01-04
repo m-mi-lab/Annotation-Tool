@@ -1429,6 +1429,47 @@ const Dashboard = () => {
             </Card>
 
             <Card>
+              <CardHeader><CardTitle>Per-User Document Progress</CardTitle></CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500 mb-4">Progress bars showing each user's annotation completion per document</p>
+                <div className="space-y-4">
+                  {documentUserProgress.length === 0 ? (
+                    <p className="text-sm text-gray-600">No documents with assigned users found.</p>
+                  ) : (
+                    documentUserProgress.map((doc) => (
+                      <div key={doc.document_id} className="border rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium">{doc.filename}</span>
+                          <span className="text-xs text-gray-500">{doc.total_sentences} sentences</span>
+                        </div>
+                        {doc.user_progress.length === 0 ? (
+                          <p className="text-xs text-gray-400">No annotators assigned</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {doc.user_progress.map((up) => (
+                              <div key={up.user_id} className="flex items-center gap-3">
+                                <span className="text-sm w-32 truncate" title={up.user_name}>{up.user_name}</span>
+                                <div className="flex-1 h-4 bg-gray-200 rounded relative">
+                                  <div 
+                                    className={`h-4 rounded ${up.progress === 100 ? 'bg-green-500' : 'bg-blue-500'}`}
+                                    style={{ width: `${up.progress}%` }}
+                                  />
+                                  <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white mix-blend-difference">
+                                    {up.annotated}/{up.total} ({up.progress}%)
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>User Activity Log</CardTitle>
