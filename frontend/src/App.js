@@ -237,12 +237,18 @@ const AuthForm = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login, register } = useAuth();
+  const navigate = useNavigate();
 
   const submit = async (e) => {
     e.preventDefault(); setError(""); setLoading(true);
     try {
       const result = isLogin ? await login(email, password) : await register(email, password, fullName);
-      if (!result.success) setError(result.error);
+      if (!result.success) {
+        setError(result.error);
+      } else {
+        // Redirect to dashboard after successful login
+        navigate('/dashboard');
+      }
     } catch {
       setError("Unexpected error");
     } finally { setLoading(false); }
