@@ -253,7 +253,7 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -261,6 +261,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ PASSED - /api/download/my-annotations-csv/{document_id} endpoint working correctly. Authentication properly enforced (403 for unauthenticated requests). CSV export includes all required columns: document_id, sentence_id, subject_id, row_index, sentence_index, sentence_text, tag_domain, tag_category, tag, valence, notes, is_skipped, confidence, duration_ms. Only current user's annotations included in export. Proper Content-Disposition headers for file downloads. Confidence and duration_ms values properly populated from annotation data."
+      - working: "NA"
+        agent: "main"
+        comment: "UPDATED: Added timestamp column for annotation creation time, reordered columns to: document_id, sentence_id, subject_id, row_index, sentence_index, sentence_text, tag_domain, tag_category, tag, valence, confidence (per-tag), notes, is_skipped, timestamp, duration_ms. Confidence now extracted from per-tag data, skipped=TRUE for skipped annotations."
 
   - task: "Per-User Paragraph Export Endpoint"
     implemented: true
@@ -268,7 +271,7 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -276,6 +279,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ PASSED - /api/download/my-annotated-paragraphs/{document_id} endpoint working correctly. Authentication properly enforced (403 for unauthenticated requests). CSV format includes required columns: row_index, subject_id, annotated_paragraph_text. Inline tags properly formatted as 'Domain:Category:Tag(+/-)@UserName' within paragraph text. Skipped annotations excluded from paragraph reconstruction. Only current user's annotations included in export."
+      - working: "NA"
+        agent: "main"
+        comment: "UPDATED: Added timestamp to paragraph export, skipped annotations now show as [SKIPPED@user@timestamp], per-tag confidence included in tag format as (valence,conf=X)@user@timestamp"
 
   - task: "Admin CSV Export with Confidence and Duration"
     implemented: true
