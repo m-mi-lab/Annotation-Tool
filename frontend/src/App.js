@@ -549,6 +549,13 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
     return found ? found.valence : null;
   };
 
+  // Calculate progress based on sentences annotated by current user
+  const annotatedSentences = sentences.filter(s => 
+    s.annotations && s.annotations.some(a => a.user_id === user?.id)
+  ).length;
+  const totalSentences = sentences.length;
+  const annotationProgress = totalSentences > 0 ? (annotatedSentences / totalSentences) * 100 : 0;
+  const isDocumentComplete = annotatedSentences === totalSentences && totalSentences > 0;
   const progress = ((currentIndex + 1) / sentences.length) * 100;
 
   return (
