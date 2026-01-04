@@ -310,8 +310,8 @@ const AuthForm = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-900">{isLogin ? "Sign In" : "Create Account"}</CardTitle>
-          <p className="text-gray-600 mt-2">{isLogin ? "Access the SDOH Annotation Tool" : "Join the annotation team"}</p>
+          <CardTitle className="text-2xl font-bold text-foreground">{isLogin ? "Sign In" : "Create Account"}</CardTitle>
+          <p className="text-muted-foreground mt-2">{isLogin ? "Access the SDOH Annotation Tool" : "Join the annotation team"}</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={submit} className="space-y-4">
