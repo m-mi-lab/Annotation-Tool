@@ -112,7 +112,19 @@ const AccountPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const navigate = useNavigate();
+
+  // Apply theme on mount and when it changes
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
