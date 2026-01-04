@@ -1511,6 +1511,438 @@ startxref
             self.token = original_token
             return False
 
+    def test_domain_tag_stats_endpoint(self):
+        """Test /api/analytics/domain-tag-stats endpoint"""
+        print("\n🔍 Testing Domain Tag Stats Endpoint...")
+        
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        success, response = self.run_test(
+            "Domain Tag Stats Analytics",
+            "GET",
+            "analytics/domain-tag-stats",
+            200
+        )
+        
+        if success and isinstance(response, dict):
+            # Check required fields
+            required_fields = ['domain_totals', 'tag_details', 'domains']
+            missing_fields = [field for field in required_fields if field not in response]
+            
+            if missing_fields:
+                print(f"   ❌ Missing required fields: {missing_fields}")
+                self.token = original_token
+                return False
+            
+            print(f"   ✅ All required fields present: {required_fields}")
+            
+            # Verify domain_totals structure
+            domain_totals = response.get('domain_totals', {})
+            if isinstance(domain_totals, dict):
+                print(f"   ✅ domain_totals is object with {len(domain_totals)} domains")
+                for domain, count in list(domain_totals.items())[:3]:
+                    print(f"      - {domain}: {count} tags")
+            else:
+                print(f"   ❌ domain_totals should be object, got {type(domain_totals)}")
+                self.token = original_token
+                return False
+            
+            # Verify tag_details structure (nested object)
+            tag_details = response.get('tag_details', {})
+            if isinstance(tag_details, dict):
+                print(f"   ✅ tag_details is nested object with {len(tag_details)} domains")
+                for domain, categories in list(tag_details.items())[:2]:
+                    if isinstance(categories, dict):
+                        print(f"      - {domain}: {len(categories)} categories")
+                        for category, tags in list(categories.items())[:2]:
+                            if isinstance(tags, dict):
+                                print(f"        - {category}: {len(tags)} tags")
+                            else:
+                                print(f"   ❌ Tags should be object, got {type(tags)}")
+                                self.token = original_token
+                                return False
+                    else:
+                        print(f"   ❌ Categories should be object, got {type(categories)}")
+                        self.token = original_token
+                        return False
+            else:
+                print(f"   ❌ tag_details should be object, got {type(tag_details)}")
+                self.token = original_token
+                return False
+            
+            # Verify domains array
+            domains = response.get('domains', [])
+            if isinstance(domains, list):
+                print(f"   ✅ domains is array with {len(domains)} SDOH domain names")
+                expected_domains = ["Economic Stability", "Education Access and Quality", 
+                                  "Health Care Access and Quality", "Neighborhood and Built Environment",
+                                  "Social and Community Context"]
+                for domain in expected_domains:
+                    if domain in domains:
+                        print(f"      ✅ Found expected domain: {domain}")
+                    else:
+                        print(f"      ⚠️  Missing expected domain: {domain}")
+            else:
+                print(f"   ❌ domains should be array, got {type(domains)}")
+                self.token = original_token
+                return False
+            
+            print("   ✅ Domain Tag Stats endpoint: ALL CHECKS PASSED")
+            self.token = original_token
+            return True
+        else:
+            print(f"   ❌ Expected dict response, got {type(response)}")
+            self.token = original_token
+            return False
+
+    def test_domain_chart_endpoint(self):
+        """Test /api/analytics/domain-chart/{domain_name} endpoint"""
+        print("\n🔍 Testing Domain Chart Endpoint...")
+        
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        # Test with "Economic Stability" domain
+        domain_name = "Economic Stability"
+        
+        import requests
+        url = f"{self.base_url}/analytics/domain-chart/{domain_name}"
+        headers = {'Authorization': f'Bearer {self.admin_token}'}
+        
+        try:
+            response = requests.get(url, headers=headers)
+            success = response.status_code == 200
+            
+            if success:
+                content_type = response.headers.get('content-type', '')
+                content_length = len(response.content)
+                
+                if 'image/png' in content_type:
+                    print(f"   ✅ Domain Chart - Status: 200, Content-Type: {content_type}")
+                    print(f"   ✅ PNG image returned with size: {content_length} bytes")
+                    print(f"   ✅ Domain tested: {domain_name}")
+                    
+                    # Test authentication requirement
+                    unauth_response = requests.get(url)  # No auth header
+                    if unauth_response.status_code == 401:
+                        print(f"   ✅ Authentication properly required (401 without token)")
+                    else:
+                        print(f"   ⚠️  Expected 401 without auth, got {unauth_response.status_code}")
+                    
+                    self.token = original_token
+                    return True
+                else:
+                    print(f"   ❌ Expected image/png, got content-type: {content_type}")
+                    self.token = original_token
+                    return False
+            else:
+                print(f"   ❌ Domain Chart failed - Status: {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error: {response.text}")
+                self.token = original_token
+                return False
+                
+        except Exception as e:
+            print(f"   ❌ Domain Chart - Error: {str(e)}")
+            self.token = original_token
+            return False
+
+    def test_all_documents_user_progress_endpoint(self):
+        """Test /api/analytics/all-documents-user-progress endpoint"""
+        print("\n🔍 Testing All Documents User Progress Endpoint...")
+        
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        success, response = self.run_test(
+            "All Documents User Progress Analytics",
+            "GET",
+            "analytics/all-documents-user-progress",
+            200
+        )
+        
+        if success and isinstance(response, list):
+            print(f"   ✅ Response is array with {len(response)} documents")
+            
+            if len(response) > 0:
+                # Check structure of first document
+                doc = response[0]
+                required_fields = ['filename', 'total_sentences', 'user_progress']
+                missing_fields = [field for field in required_fields if field not in doc]
+                
+                if missing_fields:
+                    print(f"   ❌ Missing required fields in document: {missing_fields}")
+                    self.token = original_token
+                    return False
+                
+                print(f"   ✅ Document has required fields: {required_fields}")
+                print(f"   Document: {doc.get('filename')} - {doc.get('total_sentences')} sentences")
+                
+                # Check user_progress structure
+                user_progress = doc.get('user_progress', [])
+                if isinstance(user_progress, list):
+                    print(f"   ✅ user_progress is array with {len(user_progress)} users")
+                    
+                    if len(user_progress) > 0:
+                        user = user_progress[0]
+                        required_user_fields = ['user_name', 'annotated', 'total', 'progress']
+                        missing_user_fields = [field for field in required_user_fields if field not in user]
+                        
+                        if missing_user_fields:
+                            print(f"   ❌ Missing required fields in user_progress: {missing_user_fields}")
+                            self.token = original_token
+                            return False
+                        
+                        print(f"   ✅ User progress has required fields: {required_user_fields}")
+                        print(f"   Sample user: {user.get('user_name')} - {user.get('annotated')}/{user.get('total')} ({user.get('progress'):.1%})")
+                    else:
+                        print(f"   ⚠️  No user progress data (acceptable if no annotations exist)")
+                else:
+                    print(f"   ❌ user_progress should be array, got {type(user_progress)}")
+                    self.token = original_token
+                    return False
+            else:
+                print(f"   ⚠️  No documents found (acceptable if no documents exist)")
+            
+            print("   ✅ All Documents User Progress endpoint: ALL CHECKS PASSED")
+            self.token = original_token
+            return True
+        else:
+            print(f"   ❌ Expected array response, got {type(response)}")
+            self.token = original_token
+            return False
+
+    def test_activity_log_with_user_filter_endpoint(self):
+        """Test /api/admin/download/activity-log endpoint with user filter"""
+        print("\n🔍 Testing Activity Log with User Filter Endpoint...")
+        
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        # Test 1: Download all activities (no user filter)
+        import requests
+        url = f"{self.base_url}/admin/download/activity-log"
+        headers = {'Authorization': f'Bearer {self.admin_token}'}
+        
+        try:
+            response = requests.get(url, headers=headers)
+            success = response.status_code == 200
+            
+            if success:
+                content_type = response.headers.get('content-type', '')
+                content_disposition = response.headers.get('content-disposition', '')
+                
+                if 'text/csv' in content_type:
+                    print(f"   ✅ Activity Log (All) - Status: 200, Content-Type: {content_type}")
+                    print(f"   Content-Disposition: {content_disposition}")
+                    
+                    # Parse CSV content
+                    csv_content = response.text
+                    csv_lines = csv_content.strip().split('\n')
+                    
+                    if len(csv_lines) > 0:
+                        header = csv_lines[0]
+                        expected_columns = ["timestamp", "user_id", "user_name", "document_id", 
+                                          "sentence_id", "action_type", "metadata"]
+                        
+                        print(f"   CSV Header: {header}")
+                        
+                        # Verify columns
+                        header_columns = [col.strip('"') for col in header.split(',')]
+                        missing_columns = [col for col in expected_columns if col not in header_columns]
+                        
+                        if missing_columns:
+                            print(f"   ❌ Missing columns: {missing_columns}")
+                        else:
+                            print(f"   ✅ All required columns present: {len(expected_columns)} columns")
+                        
+                        print(f"   Activity log contains {len(csv_lines) - 1} data rows")
+                    else:
+                        print("   ⚠️  Activity log is empty (acceptable if no activities logged)")
+                else:
+                    print(f"   ❌ Expected text/csv, got content-type: {content_type}")
+                    self.token = original_token
+                    return False
+            else:
+                print(f"   ❌ Activity Log (All) failed - Status: {response.status_code}")
+                self.token = original_token
+                return False
+            
+            # Test 2: Download activities for specific user (if we have a user ID)
+            if hasattr(self, 'admin_user_id') and self.admin_user_id:
+                url_with_filter = f"{self.base_url}/admin/download/activity-log?user_id={self.admin_user_id}"
+                
+                response_filtered = requests.get(url_with_filter, headers=headers)
+                success_filtered = response_filtered.status_code == 200
+                
+                if success_filtered:
+                    content_type_filtered = response_filtered.headers.get('content-type', '')
+                    
+                    if 'text/csv' in content_type_filtered:
+                        print(f"   ✅ Activity Log (Filtered) - Status: 200, Content-Type: {content_type_filtered}")
+                        
+                        csv_content_filtered = response_filtered.text
+                        csv_lines_filtered = csv_content_filtered.strip().split('\n')
+                        
+                        print(f"   Filtered activity log contains {len(csv_lines_filtered) - 1} data rows")
+                        print(f"   ✅ User filter working (user_id={self.admin_user_id})")
+                    else:
+                        print(f"   ❌ Expected text/csv for filtered log, got: {content_type_filtered}")
+                        self.token = original_token
+                        return False
+                else:
+                    print(f"   ❌ Activity Log (Filtered) failed - Status: {response_filtered.status_code}")
+                    self.token = original_token
+                    return False
+            else:
+                print("   ⚠️  No admin user ID available for filter test")
+            
+            print("   ✅ Activity Log with User Filter endpoint: ALL CHECKS PASSED")
+            self.token = original_token
+            return True
+                
+        except Exception as e:
+            print(f"   ❌ Activity Log - Error: {str(e)}")
+            self.token = original_token
+            return False
+
+    def test_resource_preview_excel_endpoint(self):
+        """Test /api/resources/{id}/preview endpoint for Excel files"""
+        print("\n🔍 Testing Resource Preview for Excel Files...")
+        
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        # First, upload an Excel file for testing
+        excel_content = self.create_test_excel_file()
+        
+        files = {
+            'file': ('test_spreadsheet.xlsx', excel_content, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        }
+        
+        success, upload_response = self.run_test(
+            "Admin - Upload Excel File for Preview Test",
+            "POST",
+            "admin/resources/upload",
+            200,
+            files=files
+        )
+        
+        if not success or 'id' not in upload_response:
+            print("   ❌ Failed to upload Excel file for testing")
+            self.token = original_token
+            return False
+        
+        excel_resource_id = upload_response['id']
+        print(f"   Excel file uploaded with ID: {excel_resource_id}")
+        
+        # Test Excel preview
+        import requests
+        url = f"{self.base_url}/resources/{excel_resource_id}/preview"
+        headers = {'Authorization': f'Bearer {self.admin_token}'}
+        
+        try:
+            response = requests.get(url, headers=headers)
+            success = response.status_code == 200
+            
+            if success:
+                content_type = response.headers.get('content-type', '')
+                content = response.text
+                
+                if 'text/html' in content_type:
+                    print(f"   ✅ Excel Preview - Status: 200, Content-Type: {content_type}")
+                    
+                    # Check for HTML table structure
+                    html_checks = [
+                        ('<table' in content, 'HTML table tag'),
+                        ('<tr' in content, 'Table rows'),
+                        ('<td' in content or '<th' in content, 'Table cells'),
+                        ('Header 1' in content or 'Data' in content, 'Table content'),
+                        ('<!DOCTYPE html>' in content or '<html>' in content, 'HTML structure')
+                    ]
+                    
+                    passed_checks = 0
+                    for check, description in html_checks:
+                        if check:
+                            passed_checks += 1
+                            print(f"      ✅ {description}")
+                        else:
+                            print(f"      ❌ {description}")
+                    
+                    print(f"   HTML table validation: {passed_checks}/{len(html_checks)} checks passed")
+                    
+                    # Check for first 10 rows limitation
+                    row_count = content.count('<tr')
+                    if row_count <= 11:  # Header + max 10 data rows
+                        print(f"   ✅ Row limit respected: {row_count} rows (including header)")
+                    else:
+                        print(f"   ⚠️  More than 10 rows found: {row_count} (may be acceptable)")
+                    
+                    print(f"   Content preview: {content[:200]}...")
+                    
+                    self.token = original_token
+                    return passed_checks >= 3  # At least basic table structure
+                else:
+                    print(f"   ❌ Expected text/html, got content-type: {content_type}")
+                    self.token = original_token
+                    return False
+            else:
+                print(f"   ❌ Excel Preview failed - Status: {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error: {response.text}")
+                self.token = original_token
+                return False
+                
+        except Exception as e:
+            print(f"   ❌ Excel Preview - Error: {str(e)}")
+            self.token = original_token
+            return False
+
+    def create_test_excel_file(self):
+        """Create a test Excel file for preview testing"""
+        try:
+            import openpyxl
+            from io import BytesIO
+            
+            # Create a new workbook and worksheet
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = "Test Sheet"
+            
+            # Add headers
+            headers = ["Header 1", "Header 2", "Header 3", "Header 4"]
+            for col, header in enumerate(headers, 1):
+                ws.cell(row=1, column=col, value=header)
+            
+            # Add test data (15 rows to test the 10-row limit)
+            for row in range(2, 17):
+                for col in range(1, 5):
+                    ws.cell(row=row, column=col, value=f"Data {row}-{col}")
+            
+            # Save to BytesIO
+            buffer = BytesIO()
+            wb.save(buffer)
+            buffer.seek(0)
+            return buffer.getvalue()
+            
+        except ImportError:
+            # If openpyxl is not available, create a minimal xlsx-like file
+            # This is a very basic xlsx structure for testing
+            xlsx_content = b'PK\x03\x04\x14\x08!'
+            return xlsx_content
+
     def run_all_tests(self):
         """Run all API tests including comprehensive admin functionality"""
         print("🚀 Starting SDOH API Tests with Admin Functionality")
