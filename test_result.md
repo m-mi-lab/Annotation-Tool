@@ -625,6 +625,18 @@ frontend:
         agent: "testing"
         comment: "✅ PASSED - User Activity Log section fully functional. Found section with user selection dropdown showing 'All Users' with multiple user options available. Download Activity Log button present and functional - clicking initiates download successfully. Dropdown allows filtering activities by specific users. All requirements from review request met."
 
+  - task: "Dark/Light Mode Theme Toggle on Account Page"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "New testing request for dark/light mode theme toggle functionality on Account page. Need to verify: 1) Account page navigation, 2) Appearance section with Light/Dark buttons, 3) Theme switching functionality, 4) UI changes between modes, 5) Persistence across navigation and page refresh."
+
 
 metadata:
   created_by: "main_agent"
