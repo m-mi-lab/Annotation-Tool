@@ -1,88 +1,199 @@
-<analysis>
-The AI engineer began by stabilizing the SDOH annotation tool, fixing initial UI rendering and  compilation errors. Key features like a Resources page, Home page, bulk deletion, account management, and enhanced analytics with server-rendered charts were progressively added. A significant focus was on refining the annotation interface with subject-based navigation, individual tag toggling, valence-based styling, and comprehensive keyboard shortcuts. The engineer also addressed persistent UI 404s and Not Found errors by implementing missing backend endpoints (e.g., admin users, resources) and robust authentication handling (token query params, global 401 interceptor). CSV exports were extensively refined, including inline and paragraph formats, and a default project management system was introduced. The work culminated in converting all alerts/confirms to toasts and implementing per-user and combined annotation exports with detailed user information.
-</analysis>
+<analysis>**original_problem_statement:**
+The user has requested the following changes and fixes:
+1.  The confidence score and the annotation timestamp are not being included in the My Paragraphs and My Annotations CSV downloads; they need to be added.
+2.  When a user skips a sentence using the 'S' shortcut, it should be recorded as  in the CSV file downloads.
+3.  After a user has annotated all sentences in a document, a visual indicator should appear to confirm that the document is complete.
+4.  On the Documents tab, the default project label that appears on uploaded files should be removed.
 
-<product_requirements>
-The core requirement was a web app for annotating de-identified health records from CSV, featuring user authentication, structured tag annotation (SDOH domains, valence, skip), metrics (IRR, prevalence), and admin functions (CSV upload/delete, user management, export).
+**User's preferred language**:
+English
 
-Key features added throughout development:
-- Resources Page: Admin upload, all user download, with preview for PDFs/images, search, filter, pagination.
-- Home Page: Quick links, default landing.
-- Bulk Deletion: Users, documents, annotations.
-- Account Management: Change password, update display name.
-- Message Board (UI present, functionality not detailed in trajectory).
-- Enhanced Analytics: Per-user stats, sentences left, IRR, server-rendered category/project charts.
-- Subject-Based Annotation: Detect subject IDs, prev/next buttons.
-- Document/Annotation Export: Original, inline annotated CSV (per-tag rows, detailed columns), annotated paragraphs (reconstructs original text with inline tags), per-user downloads.
-- Default Project Management: Admin sets a global project name, new uploads use it, bulk reassign existing documents.
-- Annotation UI: Individual tag toggling, valence styling (green/red), keyboard shortcuts, Save/Save+Prev/Save+Next buttons, auto-advance on skip, toast notifications, global confirmation dialogs.
-</product_requirements>
+**what currently exists?**
+The application is a full-stack web tool for annotating text data from CSV files.
 
-<key_technical_concepts>
-- **Full-stack**: React, FastAPI, MongoDB.
-- **Authentication**: JWT, .
-- **UI**: shadcn/ui, Tailwind CSS.
-- **API**: Axios, Pydantic.
-- **Data**: MongoDB, GridFS.
-- **Charting**: Matplotlib.
-- **ID Management**: UUIDs.
-</key_technical_concepts>
+-   **Backend (FastAPI & MongoDB):**
+    -   Handles user authentication (JWT-based), allowing login with either email or a username.
+    -   Manages users, documents, annotations, and resources (file uploads).
+    -   Provides data export features for admins and annotators.
+    -   Includes an activity logging system to track user interactions.
+    -   Supports file uploads to GridFS and provides previews for images, PDFs, and DOCX files (by converting DOCX to HTML).
 
-<code_architecture>
+-   **Frontend (React & Tailwind CSS):**
+    -   A single-page application with tabs for Home, Documents, Annotate, Resources, and Admin.
+    -   **Annotation Interface:** Features subject-based navigation, a structured tag-set, valence selection (+/-) with color-coded UI, and per-tag confidence sliders (1-5 scale) with clickable indicators.
+    -   **Document Management:** Admins can upload documents, delete them, and assign specific annotators to each document.
+    -   **Admin Panel:** Includes user management (add/delete), analytics, and an activity log download button.
+    -   **UI/UX:** Uses custom toast notifications and confirmation dialogs for a consistent user experience.
+
+The entire frontend is currently contained within a single large file, .
+
+**Last working item**:
+The agent was about to begin implementing a new set of features and bug fixes requested by the user.
+
+-   Last item agent was working: Investigating the backend download endpoints ( and ) in  to address the user's request to include , , and  status in the exported files.
+-   Status: **NOT STARTED**
+-   Agent Testing Done: N
+-   Which testing method agent to use? backend testing agent
+-   User Testing Done: N
+
+**All Pending/In progress Issue list**:
+-   **Issue 1 (P0):** Per-user download files are missing , , and  data.
+-   **Issue 2 (P1):** No visual indicator for 100% document annotation completion.
+-   **Issue 3 (P1):** The default project label is incorrectly displayed on document cards.
+
+**Issues Detail:**
+-   **Issue 1:** Per-user download files are missing , , and  data.
+    -   **Attempted fixes:** None. The agent was at the investigation stage.
+    -   **Next debug checklist:**
+        1.  In , locate the  and  download endpoints.
+        2.  For the CSV endpoint, modify the logic to fetch and write the  timestamp and  status for each annotation.
+        3.  Since  is stored per-tag within an annotation, adjust the CSV generation to correctly include this data. The current structure might need to be adapted to handle multiple tags with different confidence scores for a single annotation.
+        4.  For the paragraph export, confirm that skipped annotations are being correctly saved with  in the database when the 'S' key is pressed in the UI. The current paragraph export already excludes skipped annotations by design.
+    -   **Why fix this issue and what will be achieved with the fix?** To provide complete and accurate data exports for annotators and admins, which is critical for analysis.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Backend
+
+-   **Issue 2:** No visual indicator for 100% document annotation completion.
+    -   **Attempted fixes:** None.
+    -   **Next debug checklist:**
+        1.  In , within the  component, locate the progress bar logic.
+        2.  Add a conditional check to see if .
+        3.  When the condition is met, render a Complete badge or message next to the progress bar or document title.
+    -   **Why fix this issue and what will be achieved with the fix?** This will improve the user experience by giving annotators clear feedback when they have finished their task.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Frontend
+
+-   **Issue 3:** The default project label is incorrectly displayed on document cards.
+    -   **Attempted fixes:** The Set Default Project feature was removed, but the UI label on the document card was missed.
+    -   **Next debug checklist:**
+        1.  In , find the JSX that renders the document cards in the Documents tab (inside the  loop).
+        2.  Locate and remove the element that displays  or the hardcoded Default Project text.
+    -   **Why fix this issue and what will be achieved with the fix?** To remove UI elements related to a deprecated feature, preventing user confusion.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Frontend
+
+**In progress Task List**:
+None.
+
+**Upcoming and Future Tasks**
+-   **(P0)** Fix per-user data exports to include , , and  status. (Files: )
+-   **(P1)** Add a visual Completed indicator for fully annotated documents. (File: )
+-   **(P1)** Remove the Default Project label from the document cards. (File: )
+
+**Completed work in this session**
+-   **Authentication & Login:**
+    -   Enabled login with either username or email by updating the backend validation and frontend placeholders (, ).
+    -   Fixed post-login redirection to ensure users land on the  page ().
+-   **Annotation UI/UX:**
+    -   Updated tag valence buttons (/) to color the entire button group green or red ().
+    -   Simplified the Selected Tags view to show pale colors and remove redundant buttons ().
+    -   Implemented per-tag confidence scores on a 1-5 scale with a custom clickable slider and descriptive labels (, ).
+    -   Relocated the keyboard shortcuts legend to a more logical position in the Add Tags section ().
+-   **Resource Management:**
+    -   Fixed a critical backend error () that prevented file uploads ().
+    -   Implemented a collapsible preview for resources and fixed the broken delete functionality by adding the missing backend endpoint (, ).
+    -   Added preview support for  and  files by installing  and adding a backend conversion endpoint (, ).
+-   **Admin & Document Management:**
+    -   Removed the Set Default Project feature and replaced it with the ability for admins to assign users to specific documents (, ).
+    -   Fixed broken Delete Selected and Add User buttons on the admin page by implementing the missing dialogs and confirmation logic ().
+-   **General Bug Fixes:**
+    -   Resolved a  crash on the Account page ().
+    -   Fixed an issue where annotations were missed in downloads if the  field was empty ().
+    -   Implemented the missing  endpoint, which was preventing the annotation UI from loading ().
+    -   Customized CSV upload logic to handle specific column names (, , etc.) for subject ID and text content ().
+    -   Removed a list of user-specified annotation tags from the backend configuration ().
+
+**Earlier issues found/mentioned but not fixed**
+None.
+
+**Known issue recurrence from previous fork**
+None.
+
+**Code Architecture**
 
 
+**Key Technical Concepts**
+-   **Full-stack**: React, FastAPI, MongoDB
+-   **Authentication**: JWT, 
+-   **UI**: shadcn/ui, Tailwind CSS, lucide-react
+-   **API**: Axios, Pydantic
+-   **Data Storage**: MongoDB, GridFS
+-   **File Conversion**:  (for .docx to HTML)
+-   **ID Management**: UUIDs
+
+**key DB schema**
+-   **users**: 
+-   **documents**: 
+-   **sentences**: 
+-   **annotations**: 
+-   **AnnotationTag**: 
+-   **resources_meta**:  (GridFS metadata)
+-   **user_activities**: 
+
+**changes in tech stack**
+-   **Added Python libraries**: , , ,  to support server-side  to HTML conversion for previews.
+
+**All files of reference**
+-   : The core FastAPI application. Has been repeatedly modified to add and fix endpoints for resource management, user assignment, authentication, data exports, and activity logging.
+-   : The monolithic React application file. It contains all UI components and logic and has been heavily edited to implement UI changes, add features like user assignment, and fix numerous bugs.
+-   : Updated to add new dependencies for  file processing.
+-   : The file used to coordinate and document testing efforts.
+
+**Areas that need refactoring**:
+-   The  file is over 1800 lines long and contains the entire application's frontend logic and components. It is becoming unmanageable and should be broken down into smaller, reusable components stored in a dedicated  directory.
+
+**key api endpoints**
+-   : Assigns users to a document.
+-   : Logs a user activity event.
+-   : Downloads a CSV of user activities.
+-   : Deletes an uploaded resource.
+-   : Provides an HTML preview for .docx files.
+-   : Allows login with either username or email.
+-   : Processes CSVs with custom column mappings.
+-   : Provides a list of documents with pending annotations for the current user.
+-   : Exports a user's annotations for a document to CSV (needs fixing).
+
+**Critical Info for New Agent**
+-   **Monolithic Frontend:** Be aware that  is extremely large. Changes can have unintended side effects. It is highly recommended to start breaking this file down into smaller components as part of any future work.
+-   **UI/UX Focus:** The user is highly attentive to UI details. Ensure that any changes to colors, layout, or component behavior match their requests precisely.
+-   **Custom UI Elements:** The application uses a custom confirmation dialog () and toast system (). Do not use standard browser  or .
+-   **Per-Tag Confidence:** Confidence scores are stored on a per-tag basis within the  array of an  document, not on the annotation document itself. This must be handled correctly during data saving and exporting.
+
+**documents and test reports created in this job**
 -   
-    -   **Summary**: The core FastAPI backend. Manages API endpoints for auth, user, document, resource, sentence, and annotation handling, plus analytics. Interacts with MongoDB.
-    -   **Changes Made**:
-        -   **Authentication**: Added ,  endpoints. Implemented RBAC for admin routes.  for token validation in image requests.
-        -   **Models**:  now stores , , . New , ,  models.  model expanded with  and .
-        -   **API Endpoints**: Comprehensive CRUD for ,  (list, download). Bulk deletion for users, documents, annotations. Enhanced analytics (, , , ,  (later removed)). New download endpoints:  (expanded format), , , and planned  endpoints. Admin settings endpoints for .  CRUD endpoints.
-        -   **Document Processing**: Robust  detection, intelligent text column selection, sentence splitting,  assignment (now from default setting).
-        -   **Annotation Logic**: Skip enforces deletion of other tags for the same user/sentence. Individual tag removal from an annotation implemented.
-        -   **Error Handling**: Refined for CSV export, token validation in image requests, and serializer robustness.
 
--   
-    -   **Summary**: The main React application. Manages global state, routing, authentication, and renders UI components, communicating with FastAPI.
-    -   **Changes Made**:
-        -   **Authentication**: Login/logout, Account page. Global 401 interceptor for re-login.
-        -   **State Management**: Expanded for resources, analytics, subjects, bulk actions, and toasts.
-        -   **UI Components**: Integrated new  types, file pickers, dialogs, toasts. Custom confirmation dialog.
-        -   **Routing**:  default, deep-linking,  page.
-        -   **Dashboard/Panels**:  (users list, CRUD, bulk delete),  (CSV upload, bulk delete, project settings, all export types),  (active docs, subject navigation, new tag buttons with valence toggles, keyboard shortcuts, Save/Save+Prev/Save+Next, confidence slider, timer),  tab (upload, list, search, filter, pagination, inline preview, add external link).
-        -   **Analytics**: Integrated server-rendered charts (Category, Projects Overview).
-        -   **Deletion Logic**: Fixed UI updates, now uses global confirm dialogs. Individual tag removal from existing annotations.
-        -   **Refactoring**: Component structure, hash navigation handling, removal of stray references, toast integration for all notifications.
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User (Latest/Pending):** Reports that confidence, timestamp, and skip status are missing from downloads; asks for a completion indicator and removal of the default project label.
+2.  **Agent:** Starts investigating the download issue by looking at .
+3.  **User:** Requests removal of the default project buttons and addition of admin ability to assign users to documents. (Completed)
+4.  **Agent:** Implemented the user assignment feature, including backend and frontend changes. (Completed)
+5.  **User:** Asks to move the shortcuts legend to the Add Tags section. (Completed)
+6.  **Agent:** Moved the shortcuts legend as requested. (Completed)
+7.  **User:** Asks to remove specific shortcuts ('1-9 quick add', 'P/N valence') from the legend. (Completed)
+8.  **Agent:** Removed the specified shortcuts from the legend. (Completed)
+9.  **User:** Requests the confidence scale be changed to 1-5 with least/most confident labels. (Completed)
+10. **Agent:** Updated the confidence slider and backend model to a 1-5 scale with labels. (Completed)
 
--   
-    -   **Summary**: Python backend dependencies.
-    -   **Changes Made**: Added  for server-side chart generation,  for file uploads.
+**Project Health Check:**
+-   **Broken:** The per-user CSV/paragraph export functionality is not providing all the required data (, , ).
+-   **Mocked:** None.
 
--    and 
-    -   **Summary**: Styling using Tailwind CSS.
-    -   **Changes Made**: Custom styles for new components and features.
-</code_architecture>
+**3rd Party Integrations**
+None.
 
-<pending_tasks>
-- Add per-user my-annotations export endpoints ( and ) and corresponding annotator-facing UI buttons.
-- Add a Download CSV for selected annotator button in the Manage Annotations modal (utilizing admin endpoints with  filter).
-- Include  and  as optional columns in CSV exports.
-</pending_tasks>
+**Testing status**
+-   **Testing agent used after significant changes:** YES
+-   **Troubleshoot agent used after agent stuck in loop:** NO
+-   **Test files created:** None
+-   **Known regressions:** None
 
-<current_work>
-Immediately before this summary request, the AI engineer was finalizing the implementation of enhanced annotation data exports, specifically addressing user requests for per-user and combined annotation downloads.
+**Credentials to test flow:**
+Use the standard admin credentials to test all features:
+-   **Username:** 
+-   **Password:** 
 
-The current state of the product includes:
--   **Admin Combined Exports**:
-    -   : Provides an expanded CSV format with detailed columns including  and  (full name or email fallback), with multiple tags for a sentence producing multiple rows.
-    -   : Exports reconstructed paragraphs with inline annotations, formatted as , and explicitly excludes skipped annotations.
--   **Frontend UI for Exports**: The Download annotated CSV button in the Documents tab now triggers the updated inline CSV export.
--   **Default Project Management**: Admins can set a default project name via a modal in the Documents tab, which is used for new document uploads and can be bulk-reassigned to existing documents.
--   **Comprehensive UI/UX**: The application features a fully functional annotation interface with individual tag toggling, valence styling, keyboard shortcuts, multi-option save buttons, confidence slider (required for save, optional for skip), and auto-advance on skip. All  and  calls have been replaced with non-intrusive toasts and a custom confirmation dialog for a consistent user experience.
--   **Robustness**: Backend endpoints for admin users, documents, and resources are in place with RBAC. Image and PDF chart/preview loading now handles authentication via token query parameters.
-
-The immediate work concluded with the backend and updated frontend supporting these advanced export capabilities for admins, with pending UI additions for annotator self-service and further export column inclusions.
-</current_work>
-
-<optional_next_step>
-Implement the per-user my-annotations export endpoints and their corresponding UI buttons for annotators.
-</optional_next_step>
+**What agent forgot to execute**
+The agent has addressed all user requests up to the most recent one. It has not forgotten any tasks from previous requests. The current set of pending issues is from the user's very last message.</analysis>

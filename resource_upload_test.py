@@ -12,7 +12,7 @@ import os
 from datetime import datetime
 
 class ResourceUploadTester:
-    def __init__(self, base_url="https://socdetect-app.preview.emergentagent.com/api"):
+    def __init__(self, base_url="https://data-fixer-1.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0

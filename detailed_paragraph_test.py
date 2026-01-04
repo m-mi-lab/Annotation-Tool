@@ -11,7 +11,7 @@ import csv
 from datetime import datetime
 
 def test_paragraph_exports():
-    base_url = "https://socdetect-app.preview.emergentagent.com/api"
+    base_url = "https://data-fixer-1.preview.emergentagent.com/api"
     
     # Login as admin
     admin_credentials = {"email": "admin@sdoh.com", "password": "admin123"}
