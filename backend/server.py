@@ -1932,15 +1932,6 @@ async def preview_resource(resource_id: str, current_user: Optional[User] = Depe
             return HTMLResponse(content=full_html)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error reading Excel file: {str(e)}")
-        <body>
-            {html_content}
-        </body>
-        </html>
-        """
-        
-        return HTMLResponse(content=full_html)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error converting document: {str(e)}")
 
 
 app.include_router(api_router)
