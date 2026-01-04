@@ -1100,6 +1100,7 @@ const Dashboard = () => {
   const [resourceFile, setResourceFile] = useState(null);
   const [resourcePreview, setResourcePreview] = useState(null);
   const [expandedResourceId, setExpandedResourceId] = useState(null);
+  const [resourcesFiltered, setResourcesFiltered] = useState(false);
 
   const [selectedDocIds, setSelectedDocIds] = useState([]);
   const [selectAllDocs, setSelectAllDocs] = useState(false);
