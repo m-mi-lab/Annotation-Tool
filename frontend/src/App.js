@@ -263,7 +263,7 @@ const Header = () => {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 {user.role === "admin" && <Shield className="h-4 w-4 text-purple-600" title="Administrator" />}
-                <User className="h-4 w-4 text-gray-500" />
+                <User className="h-4 w-4 text-muted-foreground" />
                 <button className="text-sm text-blue-700 underline" onClick={() => navigate("/account")}>
                   {user.full_name}
                 </button>
@@ -1014,7 +1014,7 @@ const AdminManagementPanel = ({ notify = (msg) => window.alert(msg) }) => {
                   <Checkbox checked={selectedUserIds.includes(u.id)} onCheckedChange={() => toggleUserChecked(u.id)} />
                   <div className="flex items-center space-x-2">
                     {u.role === 'admin' && <Shield className="h-4 w-4 text-purple-600" />}
-                    <User className="h-4 w-4 text-gray-500" />
+                    <User className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div>
                     <p className="font-medium">{u.full_name}</p>
