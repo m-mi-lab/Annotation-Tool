@@ -638,9 +638,15 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
           </div>
           </div>
           <div className="flex items-center gap-3">
-            <Progress value={progress} className="flex-1" />
-            {progress === 100 && (
-              <Badge className="bg-green-600 text-white animate-pulse">
+            <div className="flex-1 space-y-1">
+              <Progress value={annotationProgress} className="w-full" />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>Annotated: {annotatedSentences}/{totalSentences}</span>
+                <span>Viewing: {currentIndex + 1}/{totalSentences}</span>
+              </div>
+            </div>
+            {isDocumentComplete && (
+              <Badge className="bg-green-600 text-white whitespace-nowrap">
                 <CheckCircle className="h-3 w-3 mr-1" /> Complete
               </Badge>
             )}
