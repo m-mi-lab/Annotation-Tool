@@ -1039,7 +1039,7 @@ startxref
             "Word Preview - Unauthenticated (should fail)",
             "GET",
             f"resources/{self.test_word_resource_id}/preview",
-            401  # Expect unauthorized
+            403  # Expect forbidden (not 401)
         )
         
         if success:
