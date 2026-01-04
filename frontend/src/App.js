@@ -1183,6 +1183,8 @@ const Dashboard = () => {
       setResources(res.data?.items || []);
       setResourcesTotal(res.data?.total || 0);
       setResourcesPage(res.data?.page || page);
+      // Track if any filters are active after fetch
+      setResourcesFiltered(!!query || kind !== 'all' || mime !== 'all');
     } catch {}
   };
   const addResourceLink = async (title, url) => { try { await axios.post(`${API}/admin/resources/link`, { title, url }); await fetchResources(); showToast('Link added', 'success'); } catch (e) { showToast('Error adding link: ' + (e.response?.data?.detail || 'Please try again.'), 'error'); } };
