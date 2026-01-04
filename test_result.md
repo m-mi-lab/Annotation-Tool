@@ -684,6 +684,41 @@ agent_communication:
       Implemented Projects Overview stacked chart endpoint (/api/analytics/projects-chart) and wired it in Admin -> Analytics. Added Subject filter to Manage Annotations modal (client-side unique subjects from doc annotations). Updated test plan focus and requested backend+frontend retesting.
   - agent: "testing"
     message: |
+      ✅ DARK/LIGHT MODE THEME TOGGLE TESTING COMPLETED - Comprehensive testing of new theme toggle functionality on Account page completed successfully:
+      
+      AUTHENTICATION & NAVIGATION:
+      - ✅ Admin login successful (admin@sdoh.com / admin123)
+      - ✅ Account page accessible via username click in header
+      - ✅ Navigation to /account route working correctly
+      
+      APPEARANCE SECTION VERIFICATION:
+      - ✅ 'Appearance' section found with proper title
+      - ✅ Theme description text: "Select your preferred color scheme"
+      - ✅ Light theme button with Sun icon found and functional
+      - ✅ Dark theme button with Moon icon found and functional
+      - ✅ Light theme selected by default (correct behavior)
+      
+      THEME SWITCHING FUNCTIONALITY:
+      - ✅ Dark mode toggle: 'dark' CSS class applied to document.documentElement
+      - ✅ Light mode toggle: 'dark' CSS class removed correctly
+      - ✅ Button selection states update properly (highlighted borders)
+      - ✅ Visual theme changes applied correctly between modes
+      
+      PERSISTENCE TESTING:
+      - ✅ Dark mode persists across navigation to Dashboard
+      - ✅ Dark mode persists after page refresh
+      - ✅ Theme preference correctly stored in localStorage as 'dark'
+      - ✅ Button selection state persists correctly
+      
+      SCREENSHOTS PROVIDED:
+      - account_page_initial.png: Account page with Appearance section
+      - dark_mode_active.png: Dark mode activated with Dark button selected
+      - light_mode_active.png: Light mode activated with Light button selected
+      - theme_toggle_final.png: Final verification showing persistence
+      
+      ALL TEST REQUIREMENTS FROM REVIEW REQUEST SUCCESSFULLY COMPLETED. The dark/light mode theme toggle feature is fully functional with proper UI, state management, and persistence across navigation and page refreshes.
+  - agent: "testing"
+    message: |
       ✅ FRONTEND CHANGES TESTING COMPLETED - Comprehensive testing of latest frontend changes completed successfully:
       
       DOCUMENTS TAB - PROJECT LABEL REMOVAL:
