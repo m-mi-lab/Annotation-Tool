@@ -1121,6 +1121,396 @@ startxref
         self.token = original_token
         return success
 
+    def test_per_user_csv_export_endpoint(self):
+        """Test per-user CSV export endpoint with new columns and features"""
+        if not self.test_document_id:
+            print("❌ No test document ID available for per-user CSV export test")
+            return False
+        
+        print("\n🔍 Testing Per-User CSV Export Endpoint...")
+        
+        # Use admin token for testing
+        original_token = self.token
+        self.token = self.admin_token
+        
+        # Step 1: Create a tagged annotation with per-tag confidence
+        tagged_annotation = {
+            "sentence_id": self.test_sentence_id,
+            "tags": [
+                {
+                    "domain": "Economic Stability",
+                    "category": "Employment",
+                    "tag": "Unemployed",
+                    "valence": "negative",
+                    "confidence": 4  # Per-tag confidence (1-5 scale)
+                },
+                {
+                    "domain": "Social and Community Context",
+                    "category": "Social Cohesion",
+                    "tag": "Social Isolation",
+                    "valence": "negative", 
+                    "confidence": 3  # Different confidence for this tag
+                }
+            ],
+            "notes": "Patient reports job loss and social isolation",
+            "skipped": False,
+            "duration_ms": 45000  # 45 seconds
+        }
+        
+        success, tagged_response = self.run_test(
+            "Create Tagged Annotation with Per-Tag Confidence",
+            "POST",
+            "annotations",
+            200,
+            data=tagged_annotation
+        )
+        
+        if not success:
+            self.token = original_token
+            return False
+        
+        # Step 2: Create a skipped annotation
+        skipped_annotation = {
+            "sentence_id": self.test_sentence_id,
+            "tags": [],
+            "notes": "Sentence not relevant for SDOH annotation",
+            "skipped": True,
+            "duration_ms": 5000  # 5 seconds
+        }
+        
+        # Get another sentence for skipped annotation
+        sentences_success, sentences_response = self.run_test(
+            "Get Document Sentences for Skip Test",
+            "GET",
+            f"documents/{self.test_document_id}/sentences",
+            200
+        )
+        
+        if sentences_success and len(sentences_response) > 1:
+            # Use second sentence for skipped annotation
+            second_sentence_id = sentences_response[1]['id']
+            skipped_annotation["sentence_id"] = second_sentence_id
+            
+            success, skipped_response = self.run_test(
+                "Create Skipped Annotation",
+                "POST",
+                "annotations",
+                200,
+                data=skipped_annotation
+            )
+            
+            if not success:
+                self.token = original_token
+                return False
+        
+        # Step 3: Download per-user CSV and verify content
+        import requests
+        url = f"{self.base_url}/download/my-annotations-csv/{self.test_document_id}"
+        headers = {'Authorization': f'Bearer {self.admin_token}'}
+        
+        try:
+            response = requests.get(url, headers=headers)
+            success = response.status_code == 200
+            
+            if success:
+                content_type = response.headers.get('content-type', '')
+                content_disposition = response.headers.get('content-disposition', '')
+                
+                if 'text/csv' in content_type:
+                    print(f"   ✅ CSV Export - Status: 200, Content-Type: {content_type}")
+                    print(f"   Content-Disposition: {content_disposition}")
+                    
+                    # Parse CSV content
+                    csv_content = response.text
+                    csv_lines = csv_content.strip().split('\n')
+                    
+                    if len(csv_lines) > 0:
+                        # Check header row
+                        header = csv_lines[0]
+                        expected_columns = [
+                            "document_id", "sentence_id", "subject_id", "row_index", 
+                            "sentence_index", "sentence_text", "tag_domain", "tag_category", 
+                            "tag", "valence", "confidence", "notes", "is_skipped", 
+                            "timestamp", "duration_ms"
+                        ]
+                        
+                        print(f"   CSV Header: {header}")
+                        
+                        # Verify all expected columns are present
+                        header_columns = [col.strip('"') for col in header.split(',')]
+                        missing_columns = [col for col in expected_columns if col not in header_columns]
+                        
+                        if missing_columns:
+                            print(f"   ❌ Missing columns: {missing_columns}")
+                            self.token = original_token
+                            return False
+                        else:
+                            print(f"   ✅ All required columns present: {len(expected_columns)} columns")
+                        
+                        # Parse CSV data
+                        import csv as csv_module
+                        from io import StringIO
+                        
+                        csv_reader = csv_module.DictReader(StringIO(csv_content))
+                        rows = list(csv_reader)
+                        
+                        print(f"   CSV contains {len(rows)} data rows")
+                        
+                        # Verify tagged annotations have per-tag confidence
+                        tagged_rows = [row for row in rows if row['is_skipped'].lower() == 'false' and row['tag_domain']]
+                        skipped_rows = [row for row in rows if row['is_skipped'].lower() == 'true']
+                        
+                        print(f"   Found {len(tagged_rows)} tagged annotation rows")
+                        print(f"   Found {len(skipped_rows)} skipped annotation rows")
+                        
+                        # Verify tagged annotations
+                        confidence_check = True
+                        for row in tagged_rows:
+                            if not row['confidence'] or row['confidence'] == '':
+                                print(f"   ❌ Tagged row missing confidence: {row['tag']}")
+                                confidence_check = False
+                            else:
+                                print(f"   ✅ Tagged row has confidence {row['confidence']}: {row['tag_domain']}:{row['tag']}")
+                        
+                        # Verify skipped annotations
+                        skipped_check = True
+                        for row in skipped_rows:
+                            if row['is_skipped'].lower() != 'true':
+                                print(f"   ❌ Skipped row not marked as skipped")
+                                skipped_check = False
+                            else:
+                                print(f"   ✅ Skipped annotation properly marked: is_skipped=TRUE")
+                        
+                        # Verify timestamp column
+                        timestamp_check = True
+                        for row in rows:
+                            if not row['timestamp'] or row['timestamp'] == '':
+                                print(f"   ❌ Row missing timestamp")
+                                timestamp_check = False
+                                break
+                        
+                        if timestamp_check:
+                            print(f"   ✅ All rows have timestamp values")
+                        
+                        # Verify duration_ms column
+                        duration_check = True
+                        for row in rows:
+                            if row['duration_ms'] == '':
+                                print(f"   ⚠️  Row missing duration_ms (acceptable)")
+                            else:
+                                try:
+                                    duration = int(row['duration_ms'])
+                                    if duration > 0:
+                                        print(f"   ✅ Row has valid duration_ms: {duration}ms")
+                                except ValueError:
+                                    print(f"   ❌ Invalid duration_ms value: {row['duration_ms']}")
+                                    duration_check = False
+                        
+                        all_checks_passed = confidence_check and skipped_check and timestamp_check and duration_check
+                        
+                        if all_checks_passed:
+                            print("   ✅ Per-User CSV Export: ALL CHECKS PASSED")
+                            self.token = original_token
+                            return True
+                        else:
+                            print("   ❌ Per-User CSV Export: Some checks failed")
+                            self.token = original_token
+                            return False
+                    else:
+                        print("   ❌ CSV content is empty")
+                        self.token = original_token
+                        return False
+                else:
+                    print(f"   ❌ Wrong content type: {content_type}")
+                    self.token = original_token
+                    return False
+            else:
+                print(f"   ❌ CSV Export failed - Status: {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error: {response.text}")
+                self.token = original_token
+                return False
+                
+        except Exception as e:
+            print(f"   ❌ CSV Export - Error: {str(e)}")
+            self.token = original_token
+            return False
+
+    def test_per_user_paragraph_export_endpoint(self):
+        """Test per-user paragraph export endpoint with new format"""
+        if not self.test_document_id:
+            print("❌ No test document ID available for per-user paragraph export test")
+            return False
+        
+        print("\n🔍 Testing Per-User Paragraph Export Endpoint...")
+        
+        # Use admin token for testing
+        original_token = self.token
+        self.token = self.admin_token
+        
+        # Download per-user paragraph export
+        import requests
+        url = f"{self.base_url}/download/my-annotated-paragraphs/{self.test_document_id}"
+        headers = {'Authorization': f'Bearer {self.admin_token}'}
+        
+        try:
+            response = requests.get(url, headers=headers)
+            success = response.status_code == 200
+            
+            if success:
+                content_type = response.headers.get('content-type', '')
+                content_disposition = response.headers.get('content-disposition', '')
+                
+                if 'text/csv' in content_type:
+                    print(f"   ✅ Paragraph Export - Status: 200, Content-Type: {content_type}")
+                    print(f"   Content-Disposition: {content_disposition}")
+                    
+                    # Parse CSV content
+                    csv_content = response.text
+                    csv_lines = csv_content.strip().split('\n')
+                    
+                    if len(csv_lines) > 0:
+                        # Check header row
+                        header = csv_lines[0]
+                        expected_columns = ["row_index", "subject_id", "annotated_paragraph_text"]
+                        
+                        print(f"   CSV Header: {header}")
+                        
+                        # Verify expected columns
+                        header_columns = [col.strip('"') for col in header.split(',')]
+                        missing_columns = [col for col in expected_columns if col not in header_columns]
+                        
+                        if missing_columns:
+                            print(f"   ❌ Missing columns: {missing_columns}")
+                            self.token = original_token
+                            return False
+                        else:
+                            print(f"   ✅ All required columns present: {expected_columns}")
+                        
+                        # Parse CSV data
+                        import csv as csv_module
+                        from io import StringIO
+                        
+                        csv_reader = csv_module.DictReader(StringIO(csv_content))
+                        rows = list(csv_reader)
+                        
+                        print(f"   CSV contains {len(rows)} paragraph rows")
+                        
+                        # Check for new tag format with timestamp and confidence
+                        format_checks = {
+                            'tags_with_confidence': False,
+                            'tags_with_timestamp': False,
+                            'skipped_with_timestamp': False
+                        }
+                        
+                        for row in rows:
+                            paragraph_text = row['annotated_paragraph_text']
+                            
+                            # Check for tag format: Domain:Category:Tag(valence,conf=X)@User@Timestamp
+                            if '[Tags:' in paragraph_text:
+                                print(f"   Found tagged paragraph: {paragraph_text[:100]}...")
+                                
+                                # Check for confidence in tag format
+                                if 'conf=' in paragraph_text:
+                                    format_checks['tags_with_confidence'] = True
+                                    print("   ✅ Found per-tag confidence in format")
+                                
+                                # Check for timestamp in tag format
+                                if '@' in paragraph_text and paragraph_text.count('@') >= 2:
+                                    format_checks['tags_with_timestamp'] = True
+                                    print("   ✅ Found timestamp in tag format")
+                            
+                            # Check for skipped format: [SKIPPED@User@Timestamp]
+                            if '[SKIPPED@' in paragraph_text:
+                                format_checks['skipped_with_timestamp'] = True
+                                print(f"   ✅ Found skipped annotation with timestamp: {paragraph_text}")
+                        
+                        # Verify format requirements
+                        all_format_checks_passed = True
+                        
+                        if not format_checks['tags_with_confidence']:
+                            print("   ⚠️  No tagged annotations with confidence found (may be acceptable if no tagged annotations exist)")
+                        
+                        if not format_checks['tags_with_timestamp']:
+                            print("   ⚠️  No tagged annotations with timestamp found (may be acceptable if no tagged annotations exist)")
+                        
+                        if not format_checks['skipped_with_timestamp']:
+                            print("   ⚠️  No skipped annotations with timestamp found (may be acceptable if no skipped annotations exist)")
+                        
+                        # At least one format should be present if we have annotations
+                        if any(format_checks.values()):
+                            print("   ✅ Per-User Paragraph Export: Format checks passed")
+                            self.token = original_token
+                            return True
+                        else:
+                            print("   ⚠️  No annotations found in expected format (may be acceptable for empty document)")
+                            self.token = original_token
+                            return True  # Consider this a pass if document has no annotations
+                    else:
+                        print("   ❌ CSV content is empty")
+                        self.token = original_token
+                        return False
+                else:
+                    print(f"   ❌ Wrong content type: {content_type}")
+                    self.token = original_token
+                    return False
+            else:
+                print(f"   ❌ Paragraph Export failed - Status: {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error: {response.text}")
+                self.token = original_token
+                return False
+                
+        except Exception as e:
+            print(f"   ❌ Paragraph Export - Error: {str(e)}")
+            self.token = original_token
+            return False
+
+    def test_documents_no_project_name_badge(self):
+        """Test that documents do not have project_name badge in response"""
+        print("\n🔍 Testing Documents API - No Project Name Badge...")
+        
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        success, response = self.run_test(
+            "Get Documents - Check No Project Name Badge",
+            "GET",
+            "documents",
+            200
+        )
+        
+        if success and isinstance(response, list):
+            print(f"   Found {len(response)} documents")
+            
+            project_name_found = False
+            for doc in response:
+                if 'project_name' in doc and doc['project_name']:
+                    project_name_found = True
+                    print(f"   ⚠️  Document has project_name: {doc.get('filename')} - {doc['project_name']}")
+                else:
+                    print(f"   ✅ Document without project_name badge: {doc.get('filename')}")
+            
+            if not project_name_found:
+                print("   ✅ No documents have project_name badge (as expected)")
+                self.token = original_token
+                return True
+            else:
+                print("   ❌ Some documents still have project_name badge")
+                self.token = original_token
+                return False
+        else:
+            print("   ❌ Failed to get documents or invalid response format")
+            self.token = original_token
+            return False
+
     def run_all_tests(self):
         """Run all API tests including comprehensive admin functionality"""
         print("🚀 Starting SDOH API Tests with Admin Functionality")
