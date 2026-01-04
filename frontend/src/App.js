@@ -1563,6 +1563,20 @@ const Dashboard = () => {
                   </SelectContent>
                 </Select>
                 <Button variant="outline" onClick={() => fetchResources(1)}>Apply</Button>
+                {(resourcesQuery || resourcesKind !== 'all' || resourcesMime !== 'all') && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => {
+                      setResourcesQuery('');
+                      setResourcesKind('all');
+                      setResourcesMime('all');
+                      fetchResources(1);
+                    }}
+                  >
+                    <X className="h-4 w-4 mr-1" /> Clear Filters
+                  </Button>
+                )}
               </div>
               {resources.length === 0 ? (
                 <p className="text-sm text-gray-600">No resources uploaded yet.</p>
