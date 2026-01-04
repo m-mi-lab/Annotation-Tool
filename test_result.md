@@ -474,6 +474,50 @@ agent_communication:
   - agent: "main"
     message: |
       Implemented Projects Overview stacked chart endpoint (/api/analytics/projects-chart) and wired it in Admin -> Analytics. Added Subject filter to Manage Annotations modal (client-side unique subjects from doc annotations). Updated test plan focus and requested backend+frontend retesting.
+  - agent: "testing"
+    message: |
+      ✅ ACCOUNT PAGE PROFILE AND PASSWORD UPDATE TESTING COMPLETED - Comprehensive testing of Account page functionality completed successfully:
+      
+      AUTHENTICATION & NAVIGATION:
+      - ✅ Admin login successful (admin@sdoh.com / admin123)
+      - ✅ Account page accessible via username click in header
+      - ✅ Navigation to /account route working correctly
+      
+      PROFILE UPDATE FUNCTIONALITY:
+      - ✅ Full Name input field accessible and functional
+      - ✅ Profile updates save successfully to backend
+      - ✅ Name changes immediately reflected in header
+      - ✅ Profile update toast notification appears with "Profile updated" message
+      - ✅ Toast has correct green background (bg-green-600) for success styling
+      - ✅ Toast positioned correctly (fixed top-4 right-4)
+      
+      PASSWORD CHANGE FUNCTIONALITY:
+      - ✅ All three password fields accessible (Current, New, Confirm)
+      - ✅ Password mismatch validation working correctly
+      - ✅ Error toast appears with "New passwords do not match" message
+      - ✅ Error toast has correct red background (bg-red-600) for error styling
+      - ✅ Frontend validation prevents submission of mismatched passwords
+      
+      TOAST NOTIFICATION SYSTEM:
+      - ✅ Toast notifications fully functional and appearing correctly
+      - ✅ Success toasts: green background with white text
+      - ✅ Error toasts: red background with white text
+      - ✅ Toast positioning: fixed top-4 right-4 z-50 (top-right corner)
+      - ✅ Toast auto-dismiss working (3-second timeout)
+      - ✅ No "showToast is not defined" console errors
+      
+      BACKEND INTEGRATION:
+      - ✅ Profile update API calls working correctly
+      - ✅ Password change API integration functional
+      - ✅ Backend validation working for password changes
+      - ✅ Error handling working for invalid current passwords
+      
+      SCREENSHOTS PROVIDED:
+      - Profile update success toast (green background)
+      - Password mismatch error toast (red background)
+      - Account page interface with all form fields
+      
+      ALL TEST REQUIREMENTS FROM REVIEW REQUEST SUCCESSFULLY COMPLETED. Account page functionality is working correctly with proper toast notifications, form validation, and backend integration.
   - agent: "main"
     message: |
       FRONTEND TESTING INSTRUCTIONS: Please login using the seeded admin credentials to ensure admin UI is visible: email: admin@sdoh.com, password: admin123. Do not register a new user (defaults to annotator). After login, navigate to /dashboard and confirm the Admin tab is present. Then proceed with the Projects Overview and Manage Annotations tests as outlined in test_plan.
