@@ -1684,7 +1684,7 @@ const Dashboard = () => {
                     <SelectItem value="office">Office Docs</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" onClick={() => fetchResources(1)}>Apply</Button>
+                <Button variant="outline" onClick={() => fetchResources(1)}>Search</Button>
                 {(resourcesQuery || resourcesKind !== 'all' || resourcesMime !== 'all') && (
                   <Button 
                     variant="ghost" 
@@ -1693,7 +1693,7 @@ const Dashboard = () => {
                       setResourcesQuery('');
                       setResourcesKind('all');
                       setResourcesMime('all');
-                      fetchResources(1);
+                      fetchResources(1, { query: '', kind: 'all', mime: 'all' });
                     }}
                   >
                     <X className="h-4 w-4 mr-1" /> Clear Filters
