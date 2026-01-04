@@ -171,7 +171,7 @@ class UserCreate(BaseModel):
     role: str = UserRole.ANNOTATOR
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    email: str  # Can be email or username (full_name)
     password: str
 
 class AnnotationTag(BaseModel):
