@@ -481,6 +481,30 @@ frontend:
         agent: "testing"
         comment: "✅ PASSED - Account page functionality fully working. Profile update: name changes save successfully and reflect in header, success toast appears with green background. Password change: form validation working, mismatch errors show red toast, all three password fields functional. Toast system: proper positioning (top-right), correct styling (green for success, red for error), auto-dismiss after 3 seconds. Navigation: accessible via username click in header. Backend integration: API calls working correctly for both profile and password updates. All test requirements from review request successfully completed."
 
+  - task: "Document Completion Indicator in Annotation Interface"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added visual completion indicator that appears when all sentences in a document are annotated by the current user. Progress bar now shows 'Annotated: X/Y' count, and a green 'Complete' badge with checkmark appears when 100% annotated."
+
+  - task: "Remove Default Project Label from Document Cards"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Removed the deprecated 'project_name' badge display from document cards in the Documents tab. The user assignment feature replaced the default project concept."
+
 
 metadata:
   created_by: "main_agent"
