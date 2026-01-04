@@ -630,7 +630,14 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
               }} disabled={!currentSubject}>Next Subject</Button>
           </div>
           </div>
-          <Progress value={progress} className="w-full" />
+          <div className="flex items-center gap-3">
+            <Progress value={progress} className="flex-1" />
+            {progress === 100 && (
+              <Badge className="bg-green-600 text-white animate-pulse">
+                <CheckCircle className="h-3 w-3 mr-1" /> Complete
+              </Badge>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="p-4 bg-gray-50 rounded-lg">
@@ -1425,7 +1432,6 @@ const Dashboard = () => {
                           <Checkbox checked={selectedDocIds.includes(doc.id)} onCheckedChange={() => setSelectedDocIds(prev => prev.includes(doc.id) ? prev.filter(id => id !== doc.id) : [...prev, doc.id])} />
                         )}
                         <h3 className="font-medium">{doc.filename}</h3>
-                        {doc.project_name && (<Badge variant="outline">{doc.project_name}</Badge>)}
                       </div>
                       <p className="text-sm text-gray-600">
                         {doc.total_sentences} sentences • Uploaded {new Date(doc.upload_date || doc.created_at).toLocaleDateString()}
