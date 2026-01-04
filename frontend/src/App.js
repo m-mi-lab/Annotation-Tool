@@ -249,8 +249,8 @@ const AuthForm = () => {
               </div>
             )}
             <div className="space-y-2">
-              <Label>Username</Label>
-              <Input type="text" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="Enter your username" />
+              <Label>Username or Email</Label>
+              <Input type="text" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="Enter your username or email" />
             </div>
             <div className="space-y-2">
               <Label>Password</Label>
