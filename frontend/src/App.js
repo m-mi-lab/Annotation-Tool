@@ -791,7 +791,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                         <span className={`text-xs px-2 py-1 rounded font-medium ${tag.valence === 'positive' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                           {tag.valence === 'positive' ? '+' : '-'}
                         </span>
-                        <span className="text-sm font-medium text-gray-900">{tag.domain}: {tag.category} - {tag.tag}</span>
+                        <span className="text-sm font-medium text-foreground">{tag.domain}: {tag.category} - {tag.tag}</span>
                       </div>
                       <Button size="sm" variant="ghost" onClick={() => removeTag(index)} className="h-8 w-8 p-0 hover:bg-gray-100" title="Remove tag">
                         <X className="h-4 w-4 text-gray-600" />
