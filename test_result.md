@@ -1698,6 +1698,52 @@ agent_communication:
       - 31/32 backend tests passed (1 unrelated tag-prevalence endpoint 404)
       - 7/7 focused admin endpoint tests passed
       - All RBAC enforcement verified
+  - agent: "testing"
+    message: |
+      ✅ MEDICAL RECORD CSV UPLOAD TESTING COMPLETED - Comprehensive testing of updated CSV document upload with medical record columns completed successfully:
+      
+      TEST EXECUTION SUMMARY (13/13 TESTS PASSED):
+      
+      FULL MEDICAL CSV UPLOAD:
+      ✅ CSV with both 'HISTORY OF PRESENT ILLNESS' and 'SOCIAL HISTORY' columns uploads successfully
+      ✅ Upload returns 200 status with document ID and sentence count (13 sentences created)
+      ✅ note_id properly mapped to subject_id (NOTE001, NOTE002, NOTE003 verified)
+      ✅ Text from both columns combined correctly (HPI text first, then Social History)
+      ✅ Sentences properly split at periods with correct row_index and sentence_index
+      ✅ Each row creates multiple sentences from combined text
+      
+      HPI-ONLY CSV UPLOAD:
+      ✅ CSV with only 'HISTORY OF PRESENT ILLNESS' column works correctly (4 sentences)
+      ✅ note_id mapping functional (NOTE004, NOTE005 verified)
+      ✅ Backward compatibility maintained for single-column medical records
+      
+      SOCIAL HISTORY-ONLY CSV UPLOAD:
+      ✅ CSV with only 'SOCIAL HISTORY' column works correctly (5 sentences)
+      ✅ note_id mapping functional (NOTE006, NOTE007 verified)
+      ✅ Backward compatibility maintained for single-column medical records
+      
+      TEXT COMBINATION VERIFICATION:
+      ✅ HPI text appears first in combined text as required
+      ✅ Social History text properly appended after HPI text
+      ✅ Sentence splitting preserves content integrity
+      ✅ All sentence metadata (subject_id, row_index, sentence_index) accurate
+      
+      BACKWARD COMPATIBILITY:
+      ✅ Traditional CSV formats (patient_id, discharge_summary) still supported
+      ✅ Existing CSV processing logic unaffected by medical record enhancements
+      
+      DOCUMENT MANAGEMENT:
+      ✅ All uploads return proper response with document_id and sentence_count
+      ✅ Admin-only upload access properly enforced (403 for non-admin)
+      ✅ Document cleanup successful (4/4 test documents deleted)
+      
+      SAMPLE DATA VERIFICATION:
+      - Full CSV: "Patient presents with chest pain. Started 2 hours ago." + "Patient smokes 1 pack per day. Lives alone."
+      - Combined correctly: "Patient presents with chest pain Started 2 hours ago Patient smokes 1 pack per day Lives alone."
+      - Subject IDs: NOTE001, NOTE002, NOTE003 properly mapped from note_id column
+      - Sentence indexing: Row 1 has 4 sentences (0,1,2,3), Row 2 has 5 sentences (0,1,2,3,4), etc.
+      
+      The medical record CSV upload functionality is fully operational and meets ALL requirements from the review request. The system correctly handles both medical record columns (HPI + Social History), single columns, and maintains backward compatibility with existing CSV formats.
       - Proper error handling and response formats confirmed
       - Cascading deletions working correctly (documents → sentences → annotations)
       
