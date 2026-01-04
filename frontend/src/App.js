@@ -1115,13 +1115,30 @@ const Dashboard = () => {
   const [userMap, setUserMap] = useState({});
   const [filterSubject, setFilterSubject] = useState('all');
   const [toast, setToast] = useState(null);
+  const [expandedDomains, setExpandedDomains] = useState({});
+  const [domainTagStats, setDomainTagStats] = useState(null);
+  const [documentUserProgress, setDocumentUserProgress] = useState([]);
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 1600);
   };
 
+  const fetchDomainTagStats = async () => {
+    try {
+      const res = await axios.get(`${API}/analytics/domain-tag-stats`);
+      setDomainTagStats(res.data);
+    } catch {}
+  };
+
+  const fetchDocumentUserProgress = async () => {
+    try {
+      const res = await axios.get(`${API}/analytics/all-documents-user-progress`);
+      setDocumentUserProgress(res.data || []);
+    } catch {}
+  };
+
   useEffect(() => {
-    fetchDocuments(); fetchAnalytics(); fetchEnhancedAnalytics(); fetchTagStructure(); fetchResources(); fetchProjects(); fetchUsers();
+    fetchDocuments(); fetchAnalytics(); fetchEnhancedAnalytics(); fetchTagStructure(); fetchResources(); fetchProjects(); fetchUsers(); fetchDomainTagStats(); fetchDocumentUserProgress();
     const t = localStorage.getItem('token');
     if (t) {
       setProjectsChartUrl(`${API}/analytics/projects-chart?token=${encodeURIComponent(t)}`);
