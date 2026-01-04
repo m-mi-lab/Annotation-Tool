@@ -851,7 +851,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                 <div className="grid gap-2">
                   {Object.entries(categories).map(([category, tags]) => (
                     <div key={category} className="space-y-1">
-                      <h6 className="text-xs font-medium text-gray-600">{category}</h6>
+                      <h6 className="text-xs font-medium text-muted-foreground">{category}</h6>
                       <div className="flex flex-wrap gap-1">
                         {tags.map((tag) => {
                           const valence = getTagValence(domain, category, tag);
