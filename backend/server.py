@@ -1802,8 +1802,22 @@ async def delete_resource(resource_id: str, current_user: User = Depends(get_adm
     return {"message": "Resource deleted successfully"}
 
 @api_router.get("/resources/{resource_id}/preview")
-async def preview_resource(resource_id: str, current_user: User = Depends(get_current_user)):
-    """Get HTML preview of a Word document"""
+async def preview_resource(resource_id: str, current_user: Optional[User] = Depends(get_current_user_optional), token: Optional[str] = None):
+    """Get HTML preview of a Word document or Excel file"""
+    # Allow ?token for iframe previews
+    if token and not current_user:
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id = payload.get("sub")
+            if user_id:
+                u = await db.users.find_one({"id": user_id}, {"_id": 0})
+                if u:
+                    current_user = User(**u)
+        except Exception:
+            pass
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
     try:
         oid = ObjectId(resource_id)
     except Exception:
@@ -1813,36 +1827,111 @@ async def preview_resource(resource_id: str, current_user: User = Depends(get_cu
     if not meta:
         raise HTTPException(status_code=404, detail="Not found")
     
-    # Check if it's a Word document
     content_type = meta.get('content_type', '')
-    if 'word' not in content_type.lower() and not meta['filename'].endswith(('.doc', '.docx')):
-        raise HTTPException(status_code=400, detail="Preview only available for Word documents")
+    filename = meta.get('filename', '').lower()
+    
+    # Check if it's a Word document
+    is_word = 'word' in content_type.lower() or filename.endswith(('.doc', '.docx'))
+    # Check if it's an Excel file
+    is_excel = 'spreadsheet' in content_type.lower() or 'excel' in content_type.lower() or filename.endswith(('.xls', '.xlsx'))
+    
+    if not is_word and not is_excel:
+        raise HTTPException(status_code=400, detail="Preview only available for Word documents and Excel files")
     
     # Download from GridFS
     buffer = io.BytesIO()
     await fs_bucket.download_to_stream(oid, buffer)
     buffer.seek(0)
     
-    # Convert to HTML using mammoth
-    try:
-        result = mammoth.convert_to_html(buffer)
-        html_content = result.value
-        
-        # Wrap in basic HTML structure with styling
-        full_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                body {{ font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }}
-                p {{ margin: 10px 0; }}
-                h1, h2, h3 {{ margin: 15px 0 10px 0; }}
-                table {{ border-collapse: collapse; width: 100%; margin: 15px 0; }}
-                td, th {{ border: 1px solid #ddd; padding: 8px; }}
-                th {{ background-color: #f2f2f2; }}
-            </style>
-        </head>
+    if is_word:
+        # Convert Word to HTML using mammoth
+        try:
+            result = mammoth.convert_to_html(buffer)
+            html_content = result.value
+            
+            full_html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {{ font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }}
+                    p {{ margin: 10px 0; }}
+                    h1, h2, h3 {{ margin: 15px 0 10px 0; }}
+                    table {{ border-collapse: collapse; width: 100%; margin: 15px 0; }}
+                    td, th {{ border: 1px solid #ddd; padding: 8px; }}
+                    th {{ background-color: #f2f2f2; }}
+                </style>
+            </head>
+            <body>
+                {html_content}
+            </body>
+            </html>
+            """
+            return HTMLResponse(content=full_html)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error converting document: {str(e)}")
+    
+    elif is_excel:
+        # Convert Excel to HTML table (first 10 rows)
+        try:
+            import openpyxl
+            from openpyxl.utils import get_column_letter
+            
+            wb = openpyxl.load_workbook(buffer, read_only=True, data_only=True)
+            sheet = wb.active
+            
+            rows_html = []
+            row_count = 0
+            max_rows = 10
+            
+            for row in sheet.iter_rows(max_row=max_rows + 1):
+                cells = []
+                for cell in row:
+                    value = cell.value if cell.value is not None else ''
+                    # Escape HTML
+                    value = str(value).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                    if row_count == 0:
+                        cells.append(f'<th>{value}</th>')
+                    else:
+                        cells.append(f'<td>{value}</td>')
+                rows_html.append(f'<tr>{"".join(cells)}</tr>')
+                row_count += 1
+                if row_count > max_rows:
+                    break
+            
+            total_rows = sheet.max_row or 0
+            total_cols = sheet.max_column or 0
+            
+            wb.close()
+            
+            full_html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {{ font-family: Arial, sans-serif; padding: 20px; }}
+                    .info {{ color: #666; margin-bottom: 15px; font-size: 14px; }}
+                    table {{ border-collapse: collapse; width: 100%; }}
+                    td, th {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+                    th {{ background-color: #f8f9fa; font-weight: bold; }}
+                    tr:nth-child(even) {{ background-color: #f9f9f9; }}
+                    .note {{ color: #888; font-style: italic; margin-top: 10px; font-size: 12px; }}
+                </style>
+            </head>
+            <body>
+                <div class="info">Excel Preview: {total_rows} rows × {total_cols} columns</div>
+                <table>
+                    {"".join(rows_html)}
+                </table>
+                {"<p class='note'>Showing first 10 rows. Download file to see all data.</p>" if total_rows > 10 else ""}
+            </body>
+            </html>
+            """
+            return HTMLResponse(content=full_html)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error reading Excel file: {str(e)}")
         <body>
             {html_content}
         </body>
