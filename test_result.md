@@ -658,6 +658,21 @@ frontend:
         agent: "testing"
         comment: "✅ ASSIGN USERS FUNCTIONALITY TESTING COMPLETED SUCCESSFULLY - Comprehensive testing of user assignment feature completed with excellent results. AUTHENTICATION & NAVIGATION: ✅ Admin login successful (admin@sdoh.com / admin123), ✅ Documents tab accessible and loaded with 4 documents. ASSIGN USERS BUTTONS: ✅ Found 4 'Assign Users' buttons on document cards, ✅ All buttons functional and clickable. MODAL FUNCTIONALITY: ✅ 'Assign Users to Document' modal opens correctly, ✅ Modal shows proper title and description with document name (test_discharge_summaries.csv), ✅ Modal displays complete user list with 8 available users. USER SELECTION: ✅ User list displays correctly with checkboxes for: Rachel Polcyn, Analytics Test User 055010, Test Admin User, Admin User, Test User 035906, r, Test User 080509, Alexis Polcyn, ✅ Multiple users can be selected via checkboxes, ✅ Checkbox selection state works correctly. SAVE FUNCTIONALITY: ✅ Save button visible and functional, ✅ Cancel button available for cancellation, ✅ Modal closes after Save operation, ✅ API call to /api/admin/documents/{document_id}/assign-users executes successfully. ADMIN FEATURES: ✅ Admin-only access properly enforced (only annotator users shown in list), ✅ All admin features visible (Manage Annotations, Download buttons, Delete buttons), ✅ User assignment updates document cards with 'Assigned users' information. TESTING COVERAGE: ✅ Tested modal opening/closing, ✅ Tested user selection/deselection, ✅ Tested Save functionality, ✅ Tested Cancel functionality, ✅ Verified admin role-based access. The Assign Users functionality is working perfectly with proper user interface, backend integration, and admin role enforcement."
 
+  - task: "Clear All Annotations Button on Annotate Page"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Clear All Annotations button implemented in StructuredAnnotationInterface component (lines 939-957). Button appears at bottom of annotation interface with confirmation dialog and calls onClearAllAnnotations function."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL ISSUE: Clear All Annotations button is NOT VISIBLE in the annotation interface. Testing confirmed: 1) Admin login successful (admin@sdoh.com / admin123) ✓, 2) Annotate tab accessible ✓, 3) Document annotation interface loads correctly with existing annotations (ten_item_test.csv, 124/134 annotations) ✓, 4) Existing Annotations section visible with skipped annotation ✓, 5) Scrolled to bottom of annotation interface ✓, 6) Clear All Annotations button NOT FOUND ❌. The button implementation exists in code (lines 939-957) but is not rendering in the UI. This prevents users from clearing all annotations as requested in the review. Session management issues encountered during testing but core functionality verification completed."
+
 
 metadata:
   created_by: "main_agent"
