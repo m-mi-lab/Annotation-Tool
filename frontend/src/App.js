@@ -343,6 +343,72 @@ const AuthForm = () => {
   );
 };
 
+// Documents Assigned to Me Panel
+const AssignedDocsPanel = ({ onOpenDoc }) => {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  const fetchAssigned = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API}/documents/assigned-to-me`);
+      setItems(res.data || []);
+    } catch {
+    } finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchAssigned(); }, []);
+
+  if (!items.length && !loading) return null;
+
+  return (
+    <Card>
+      <CardHeader className="cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">{isExpanded ? '▼' : '▶'}</span>
+            <CardTitle>Documents Assigned to Me</CardTitle>
+            <Badge variant="secondary">{items.length}</Badge>
+          </div>
+        </div>
+      </CardHeader>
+      {isExpanded && (
+        <CardContent>
+          {loading ? (
+            <div className="text-sm text-muted-foreground">Loading assigned documents...</div>
+          ) : (
+            <div className="space-y-3">
+              {items.map((it) => (
+                <div key={it.document_id} className="p-3 border rounded-md">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">{it.filename}</div>
+                      <div className="text-xs text-muted-foreground">{it.annotated_count}/{it.total_sentences} sentences annotated</div>
+                    </div>
+                    <div className="w-48">
+                      <div className="h-2 bg-muted rounded">
+                        <div 
+                          className={`h-2 rounded ${it.progress >= 1 ? 'bg-green-500' : 'bg-blue-600'}`} 
+                          style={{ width: `${Math.round(it.progress*100)}%` }}
+                        />
+                      </div>
+                      <div className="text-xs text-muted-foreground text-right mt-1">{Math.round(it.progress*100)}%</div>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => onOpenDoc(it.document_id)}>
+                      {it.progress >= 1 ? 'Review' : 'Annotate'}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      )}
+    </Card>
+  );
+};
+
 // Active Docs Panel
 const ActiveDocsPanel = ({ onOpenDoc }) => {
   const { user } = useAuth();
