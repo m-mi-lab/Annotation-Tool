@@ -1796,6 +1796,7 @@ const Dashboard = () => {
         </TabsContent>
 
         <TabsContent value="annotate" className="space-y-4" id="annotate">
+          <AssignedDocsPanel onOpenDoc={(id) => annotateDoc(id)} />
           <ActiveDocsPanel onOpenDoc={(id) => annotateDoc(id)} />
           {!selectedDocument ? (
             <Card>
