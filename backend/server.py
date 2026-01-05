@@ -568,16 +568,14 @@ async def bulk_delete_annotations(payload: Dict[str, List[str]], current_user: U
 
 @api_router.delete("/annotations/document/{document_id}/clear-all")
 async def clear_all_document_annotations(document_id: str, current_user: User = Depends(get_current_user)):
-    """Clear all annotations for a document (only current user's annotations unless admin)"""
+    """Clear all of the current user's annotations for a document"""
     # Get all sentence IDs for this document
     sentence_ids = await db.sentences.distinct("id", {"document_id": document_id})
     if not sentence_ids:
         raise HTTPException(status_code=404, detail="Document not found or has no sentences")
     
-    # Build query - admins can delete all, regular users only their own
-    query = {"sentence_id": {"$in": sentence_ids}}
-    if current_user.role != UserRole.ADMIN:
-        query["user_id"] = current_user.id
+    # Always only delete current user's annotations (regardless of role)
+    query = {"sentence_id": {"$in": sentence_ids}, "user_id": current_user.id}
     
     result = await db.annotations.delete_many(query)
     return {"deleted": result.deleted_count}
