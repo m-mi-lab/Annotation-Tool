@@ -908,7 +908,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
           </div>
           
           {/* Navigation and Clear Actions */}
-          <div className="flex flex-wrap gap-2 items-center pt-3 mt-3 border-t">
+          <div className="flex flex-wrap gap-2 items-center pt-3 mt-3 border-t border-border">
             <span className="text-sm text-muted-foreground mr-2">Jump to:</span>
             <Button 
               variant="outline" 
@@ -940,17 +940,21 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                 variant="destructive" 
                 size="sm"
                 onClick={async () => {
-                  if (!confirmAction) return;
                   const totalAnnotations = sentences.reduce((acc, s) => acc + (s.annotations?.length || 0), 0);
                   if (totalAnnotations === 0) {
                     return;
                   }
-                  const ok = await confirmAction(`Are you sure you want to delete ALL ${totalAnnotations} annotations for this document? This action cannot be undone.`);
-                  if (ok && onClearAllAnnotations) {
-                    await onClearAllAnnotations(documentId);
+                  if (confirmAction) {
+                    const ok = await confirmAction(`Are you sure you want to delete ALL ${totalAnnotations} annotations for this document? This action cannot be undone.`);
+                    if (ok && onClearAllAnnotations) {
+                      await onClearAllAnnotations(documentId);
+                    }
+                  } else if (window.confirm(`Are you sure you want to delete ALL ${totalAnnotations} annotations for this document? This action cannot be undone.`)) {
+                    if (onClearAllAnnotations) {
+                      await onClearAllAnnotations(documentId);
+                    }
                   }
                 }}
-                disabled={sentences.reduce((acc, s) => acc + (s.annotations?.length || 0), 0) === 0}
               >
                 <Trash2 className="h-4 w-4 mr-2" /> Clear All Annotations
               </Button>
