@@ -580,6 +580,44 @@ async def clear_all_document_annotations(document_id: str, current_user: User = 
     result = await db.annotations.delete_many(query)
     return {"deleted": result.deleted_count}
 
+@api_router.get("/documents/assigned-to-me")
+async def get_documents_assigned_to_me(current_user: User = Depends(get_current_user)):
+    """Get documents assigned to the current user with progress info"""
+    # Find documents where user is in assigned_users array
+    docs = await db.documents.find(
+        {"assigned_users": current_user.id}, 
+        {"_id": 0}
+    ).to_list(1000)
+    
+    result = []
+    for doc in docs:
+        document_id = doc['id']
+        total_sentences = await db.sentences.count_documents({"document_id": document_id})
+        
+        if total_sentences == 0:
+            continue
+        
+        # Get sentence IDs for this document
+        sentence_ids = await db.sentences.distinct("id", {"document_id": document_id})
+        
+        # Count sentences annotated by current user
+        annotated_count = len(await db.annotations.distinct("sentence_id", {
+            "sentence_id": {"$in": sentence_ids},
+            "user_id": current_user.id
+        }))
+        
+        progress = annotated_count / total_sentences if total_sentences > 0 else 0
+        
+        result.append({
+            "document_id": document_id,
+            "filename": doc.get('filename', ''),
+            "total_sentences": total_sentences,
+            "annotated_count": annotated_count,
+            "progress": progress
+        })
+    
+    return result
+
 
 @api_router.get("/annotations/active-docs")
 async def get_active_docs(scope: str = Query("me"), current_user: User = Depends(get_current_user)):
