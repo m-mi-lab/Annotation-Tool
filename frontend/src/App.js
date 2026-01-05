@@ -799,7 +799,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                           <div className="flex items-center space-x-2">
                             <Checkbox checked={selectedAnnIds.includes(annotation.id)} onCheckedChange={() => toggleAnn(annotation.id)} />
                             <SkipForward className="h-4 w-4 text-orange-500" />
-                            <span className="text-sm text-muted-foreground">Skipped by User {annotation.user_id.slice(-6)}</span>
+                            <span className="text-sm text-muted-foreground">Skipped by {annotation.user_name || 'Unknown'}</span>
                           </div>
                           {canDelete && (
                             <button type="button" onClick={() => onDeleteAnnotation(annotation.id, currentSentence.id)} className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent">
