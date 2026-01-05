@@ -457,9 +457,33 @@ async def get_document_sentences(
     current_user: User = Depends(get_current_user)
 ):
     sentences = await db.sentences.find({"document_id": document_id}, {"_id": 0}).to_list(1000)
+    
+    # Get all user IDs for name lookup
+    all_user_ids = set()
+    
     for sentence in sentences:
-        annotations = await db.annotations.find({"sentence_id": sentence["id"]}, {"_id": 0}).to_list(100)
+        # Filter annotations: admins see all, others see only their own
+        if current_user.role == UserRole.ADMIN:
+            annotations = await db.annotations.find({"sentence_id": sentence["id"]}, {"_id": 0}).to_list(100)
+        else:
+            annotations = await db.annotations.find({"sentence_id": sentence["id"], "user_id": current_user.id}, {"_id": 0}).to_list(100)
+        
+        for ann in annotations:
+            if ann.get("user_id"):
+                all_user_ids.add(ann["user_id"])
+        
         sentence["annotations"] = annotations
+    
+    # Fetch user names
+    if all_user_ids:
+        users = await db.users.find({"id": {"$in": list(all_user_ids)}}, {"_id": 0, "id": 1, "full_name": 1, "email": 1}).to_list(100)
+        user_map = {u["id"]: u.get("full_name") or u.get("email", "").split("@")[0] or "Unknown" for u in users}
+        
+        # Add user names to annotations
+        for sentence in sentences:
+            for ann in sentence.get("annotations", []):
+                ann["user_name"] = user_map.get(ann.get("user_id"), "Unknown")
+    
     return sentences
 
 # ========================
