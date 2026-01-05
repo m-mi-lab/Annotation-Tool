@@ -1753,6 +1753,8 @@ const Dashboard = () => {
               onBulkDeleteAnnotations={bulkDeleteAnnotations}
               currentDocName={(documents.find(d => d.id === selectedDocument) || {}).filename}
               documentId={selectedDocument}
+              confirmAction={confirmAction}
+              onClearAllAnnotations={clearAllDocumentAnnotations}
             />
           )}
         </TabsContent>
