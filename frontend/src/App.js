@@ -823,7 +823,8 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                           <div className="flex flex-wrap gap-1 mb-2">
                             {(annotation.tags || []).map((tag, tagIdx) => (
                               <span key={tagIdx} className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded border ${tag.valence === 'positive' ? 'bg-green-600/20 text-green-600 dark:text-green-400 border-green-600/30' : 'bg-red-600/20 text-red-600 dark:text-red-400 border-red-600/30'}`}>
-                                {tag.domain}: {tag.tag} ({tag.valence})
+                                {tag.domain}: {tag.tag} ({tag.valence === 'positive' ? '+' : '-'})
+                                {tag.confidence && <span className="ml-1 opacity-75">conf: {tag.confidence}/5</span>}
                                 {canDelete && (
                                   <button type="button" className="ml-1 opacity-70 hover:opacity-100" onClick={() => deleteOneTag(annotation.id, tag)} title="Remove this tag">×</button>
                                 )}
