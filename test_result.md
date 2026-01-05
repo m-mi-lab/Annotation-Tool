@@ -720,37 +720,42 @@ agent_communication:
       Implemented Projects Overview stacked chart endpoint (/api/analytics/projects-chart) and wired it in Admin -> Analytics. Added Subject filter to Manage Annotations modal (client-side unique subjects from doc annotations). Updated test plan focus and requested backend+frontend retesting.
   - agent: "testing"
     message: |
-      ❌ CLEAR ALL ANNOTATIONS BUTTON TESTING COMPLETED - CRITICAL ISSUE FOUND
+      ❌ CLEAR ALL ANNOTATIONS BUTTON TESTING COMPLETED - CRITICAL ISSUE CONFIRMED
       
-      TESTING SUMMARY:
-      - ❌ Clear All Annotations button is NOT VISIBLE in the annotation interface
+      COMPREHENSIVE TESTING SUMMARY:
+      - ❌ Clear All Annotations button is completely missing from the UI
       - ✅ Admin login successful (admin@sdoh.com / admin123)
       - ✅ Annotate tab accessible and functional
-      - ✅ Document annotation interface loads correctly (ten_item_test.csv)
-      - ✅ Existing annotations present (124/134 annotations, skipped annotation visible)
+      - ✅ Document annotation interface loads correctly (ten_item_test.csv with 124/134 annotations)
+      - ✅ Existing annotations visible (skipped annotation present)
       - ✅ Scrolled to bottom of annotation interface successfully
-      - ❌ Clear All Annotations button NOT FOUND despite code implementation
+      - ❌ Navigation section with Clear All Annotations button NOT FOUND
+      - ❌ First Sentence and First of Subject buttons also NOT FOUND
+      - ❌ Button does not exist in DOM at all (not just hidden)
       
-      CRITICAL ISSUE DETAILS:
-      The Clear All Annotations button is implemented in the code (StructuredAnnotationInterface component, lines 939-957) but is NOT rendering in the UI. The button should appear at the bottom of the annotation interface but is completely missing from the DOM.
+      DETAILED CODE ANALYSIS:
+      The Clear All Annotations button is properly implemented in the StructuredAnnotationInterface component:
+      - Lines 910-962: Navigation section with proper CSS classes
+      - Lines 938-961: Clear All Annotations button with destructive styling and trash icon
+      - Button should always render (not conditionally hidden)
+      - Backend endpoint /api/annotations/document/{document_id}/clear-all exists
+      - Frontend clearAllDocumentAnnotations function properly implemented
+      - onClearAllAnnotations prop correctly passed to component
       
-      CODE ANALYSIS:
-      - Button implementation exists with proper confirmation dialog
-      - Uses onClearAllAnnotations prop function
-      - Should be visible when annotations are present
-      - Proper disabled state logic implemented
+      ROOT CAUSE IDENTIFIED:
+      The entire navigation section (lines 910-962) containing the Clear All Annotations button is not rendering in the UI. This suggests a component rendering issue where the navigation section is being excluded from the DOM entirely, not just hidden by CSS.
       
       IMPACT:
-      Users cannot clear all annotations as requested in the review. This is a blocking issue that prevents the core functionality from being accessible to users.
+      Users cannot clear all annotations as requested in the review. This is a blocking issue that prevents the core functionality from being accessible to users despite proper backend and frontend implementation.
       
       RECOMMENDATION:
-      Main agent needs to investigate why the Clear All Annotations button is not rendering in the UI despite being implemented in the code. Possible issues:
-      1. Missing prop passing (onClearAllAnnotations function)
-      2. Conditional rendering logic preventing button display
-      3. CSS/styling issues hiding the button
-      4. Component structure issues
+      Main agent needs to investigate why the navigation section (lines 910-962) is not rendering in the StructuredAnnotationInterface component. Possible issues:
+      1. Component structure preventing navigation section from rendering
+      2. Missing props or state causing conditional rendering to fail
+      3. CSS issues hiding the entire section
+      4. React rendering issues with the component structure
       
-      The button implementation appears correct but is not visible to users, making this feature non-functional.
+      The button implementation is correct but the entire navigation section is not appearing in the UI.
   - agent: "testing"
     message: |
       ✅ DARK/LIGHT MODE THEME TOGGLE TESTING COMPLETED - Comprehensive testing of new theme toggle functionality on Account page completed successfully:
