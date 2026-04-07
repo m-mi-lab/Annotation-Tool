@@ -53,6 +53,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def seed_admin():
+    existing = await db.users.find_one({"role": "admin"})
+    if not existing:
+        pw = bcrypt.hashpw("Admin123!".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        admin = {
+            "id": str(uuid.uuid4()),
+            "email": "admin@sdoh.app",
+            "full_name": "Admin",
+            "role": "admin",
+            "is_active": True,
+            "password": pw,
+            "created_at": datetime.utcnow().isoformat()
+        }
+        await db.users.insert_one(admin)
+        logging.info("Seeded default admin account: admin@sdoh.app / Admin123!")
+
 # Create a router with the /api prefix
 # GridFS bucket for resources
 fs_bucket = AsyncIOMotorGridFSBucket(db)
