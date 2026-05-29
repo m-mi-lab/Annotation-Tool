@@ -493,7 +493,7 @@ async def get_document_sentences(
     document_id: str,
     current_user: User = Depends(get_current_user)
 ):
-    sentences = await db.sentences.find({"document_id": document_id}, {"_id": 0}).to_list(1000)
+    sentences = await db.sentences.find({"document_id": document_id}, {"_id": 0}).sort([("row_index", 1), ("sentence_index", 1)]).to_list(1000)
     
     # Get all user IDs for name lookup
     all_user_ids = set()
@@ -697,6 +697,48 @@ async def get_documents_assigned_to_me(current_user: User = Depends(get_current_
     return result
 
 
+async def compute_last_annotation_index(document_id: str, user_id: Optional[str] = None) -> Optional[int]:
+    """Return the 0-based position of the most recently annotated sentence within the
+    document's ordered sentence list (same order as GET /documents/{id}/sentences:
+    by row_index, then sentence_index), so the frontend can resume at that spot.
+
+    When user_id is given, only that user's annotations are considered; otherwise the
+    most recent annotation by anyone on the document is used (team scope). Returns None
+    when there are no matching annotations. Computed from row_index/sentence_index rather
+    than a stored index so it works for documents uploaded before this feature existed.
+    """
+    sentence_ids = await db.sentences.distinct("id", {"document_id": document_id})
+    if not sentence_ids:
+        return None
+    ann_filter = {"sentence_id": {"$in": sentence_ids}}
+    if user_id is not None:
+        ann_filter["user_id"] = user_id
+    last_annotation = await db.annotations.find(ann_filter, {"_id": 0}).sort("created_at", -1).limit(1).to_list(1)
+    if not last_annotation:
+        return None
+    last_sentence = await db.sentences.find_one({"id": last_annotation[0]["sentence_id"]}, {"_id": 0})
+    if not last_sentence:
+        return None
+    row = last_sentence.get("row_index", 0)
+    si = last_sentence.get("sentence_index", 0)
+    # Position = number of sentences ordered before this one.
+    return await db.sentences.count_documents({
+        "document_id": document_id,
+        "$or": [
+            {"row_index": {"$lt": row}},
+            {"row_index": row, "sentence_index": {"$lt": si}},
+        ],
+    })
+
+
+@api_router.get("/documents/{document_id}/resume")
+async def get_resume_index(document_id: str, current_user: User = Depends(get_current_user)):
+    """Sentence index where the current user should resume annotating (their last
+    annotated sentence), or 0 if they haven't annotated this document yet."""
+    idx = await compute_last_annotation_index(document_id, current_user.id)
+    return {"index": idx if idx is not None else 0, "has_progress": idx is not None}
+
+
 @api_router.get("/annotations/active-docs")
 async def get_active_docs(scope: str = Query("me"), current_user: User = Depends(get_current_user)):
     """Get documents with annotation progress for the active documents panel"""
@@ -726,12 +768,9 @@ async def get_active_docs(scope: str = Query("me"), current_user: User = Depends
         progress = annotated_count / total_sentences if total_sentences > 0 else 0
         
         # Get last annotation index for resume functionality
-        last_annotation = await db.annotations.find(ann_filter, {"_id": 0}).sort("created_at", -1).limit(1).to_list(1)
-        last_annotation_index = None
-        if last_annotation:
-            last_sentence = await db.sentences.find_one({"id": last_annotation[0]["sentence_id"]}, {"_id": 0})
-            if last_sentence:
-                last_annotation_index = last_sentence.get("index", 0)
+        last_annotation_index = await compute_last_annotation_index(
+            doc["id"], current_user.id if scope == "me" else None
+        )
         
         # Only include documents with at least one annotation or if admin viewing team
         if annotated_count > 0 or (scope == "team" and current_user.role == UserRole.ADMIN):

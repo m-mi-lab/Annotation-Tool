@@ -135,8 +135,11 @@ const Dashboard = () => {
       const res = await axios.get(`${API}/documents/${documentId}/sentences`);
       const items = res.data || [];
       setSentences(items); setSelectedDocument(documentId);
-      let nextIndex = 0; if (typeof options.targetIndex === 'number') nextIndex = Math.min(Math.max(0, options.targetIndex), Math.max(0, items.length - 1));
+      let nextIndex = 0;
+      if (typeof options.targetIndex === 'number') nextIndex = options.targetIndex;
       else if (options.targetSubject) { const idx = items.findIndex(s => s.subject_id === options.targetSubject); nextIndex = idx >= 0 ? idx : 0; }
+      else { try { const r = await axios.get(`${API}/documents/${documentId}/resume`); if (typeof r.data?.index === 'number') nextIndex = r.data.index; } catch {} }
+      nextIndex = Math.min(Math.max(0, nextIndex), Math.max(0, items.length - 1));
       setCurrentSentenceIndex(nextIndex);
       setActiveTab('annotate');
       window.location.hash = 'annotate';
@@ -579,8 +582,8 @@ const Dashboard = () => {
         </TabsContent>
 
         <TabsContent value="annotate" className="space-y-4" id="annotate">
-          <AssignedDocsPanel onOpenDoc={(id) => annotateDoc(id)} />
-          <ActiveDocsPanel onOpenDoc={(id) => annotateDoc(id)} />
+          <AssignedDocsPanel onOpenDoc={(id, opts) => annotateDoc(id, opts)} />
+          <ActiveDocsPanel onOpenDoc={(id, opts) => annotateDoc(id, opts)} />
           {!selectedDocument ? (
             <Card>
               <CardContent className="text-center py-8">

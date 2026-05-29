@@ -57,7 +57,7 @@ const ActiveDocsPanel = ({ onOpenDoc }) => {
                     </div>
                     <div className="flex items-center gap-2">
                       {typeof it.last_annotation_index === "number" && (
-                        <Button size="sm" variant="outline" onClick={() => onOpenDoc(it.document_id)}>Resume</Button>
+                        <Button size="sm" variant="outline" onClick={() => onOpenDoc(it.document_id, { targetIndex: it.last_annotation_index })}>Resume</Button>
                       )}
                     </div>
                   </div>
